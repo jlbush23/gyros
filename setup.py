@@ -6,7 +6,7 @@ Created on Wed Feb  3 21:44:18 2021
 """
 from setuptools import setup
 
-dependencies = ['numpy','pandas','shutil',
+dependencies = ['numpy','pandas',
                 'astroquery','astropy','exoplanet','matplotlib','scipy']
 
 setup(
