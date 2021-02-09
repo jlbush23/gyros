@@ -11,7 +11,7 @@ import os
 import shutil
 import pickle as pkl
 
-import mastQuery
+from NASA_LCs import mastQuery
 
 
 def save_object(target_object, keep_fits = False):
