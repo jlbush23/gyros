@@ -10,6 +10,7 @@ import numpy as np
 from astropy.timeseries import LombScargle
 
 from astropy.table import Table
+from astropy.time import Time
 
 import exoplanet as xo
 
@@ -27,10 +28,18 @@ def my_LS_multi_sector(lc_df,flux_type,flux_err_avail = True, min_freq = 1/30):
     sector_list = np.unique(lc_df['sector'].to_numpy())
     
     for sector in sector_list:
-        time = lc_df[lc_df['sector'] == sector]['time']
-        flux = lc_df[lc_df['sector'] == sector][flux_type]
+        temp_lc_df = lc_df[lc_df['sector'] == sector]
+        temp_lc_df = temp_lc_df.dropna()
+        if len(temp_lc_df) == 0: continue
+    
+        if type(temp_lc_df['time'].to_numpy()[0]) == np.datetime64:  
+            time = Time(temp_lc_df['time']).jd
+        else:
+            time = temp_lc_df['time'].to_numpy(dtype = 'float')
+        
+        flux = temp_lc_df[flux_type].to_numpy(dtype = 'float')
         if flux_err_avail == True:
-            flux_err = lc_df[lc_df['sector'] == sector][flux_type + '_err']
+            flux_err = temp_lc_df[flux_type + '_err'].to_numpy(dtype = 'float')
         else:
             flux_err = None
         
@@ -155,8 +164,13 @@ def exo_acf_multi_sector(lc_df, flux_type, flux_err_avail = False, max_per = 29)
     
     for sector in sector_list:
         temp_lc_df = lc_df[lc_df['sector'] == sector]
+        temp_lc_df = temp_lc_df.dropna()
+        if len(temp_lc_df) == 0: continue
         
-        time = temp_lc_df['time'].to_numpy(dtype = 'float')
+        if type(temp_lc_df['time'].to_numpy()[0]) == np.datetime64:  
+            time = Time(temp_lc_df['time']).jd
+        else:
+            time = temp_lc_df['time'].to_numpy(dtype = 'float')
         flux = temp_lc_df[flux_type].to_numpy(dtype = 'float')
         if flux_err_avail == True:
             flux_err = temp_lc_df[flux_type + '_err'].to_numpy(dtype = 'float')
@@ -179,8 +193,16 @@ def exo_acf_multi_sector(lc_df, flux_type, flux_err_avail = False, max_per = 29)
     
     return(acf_result,acf_periodograms)
         
-def exo_acf(time,flux,flux_err = None, max_per = 29):        
+def exo_acf(time,flux,flux_err = None, max_per = 29): 
+    if flux_err is not None: lc_df = pd.DataFrame(data = {'time':time,'flux':flux, 'flux_err':flux_err})    
+    if flux_err is None: lc_df = pd.DataFrame(data = {'time':time,'flux':flux})
+    lc_df = lc_df.dropna()
     
+    time = lc_df['time'].to_numpy(dtype = 'float')
+    flux = lc_df['flux'].to_numpy(dtype = 'float')
+    if flux_err is not None: flux_err = lc_df['flux_err'].to_numpy(dtype = 'float')
+    
+    #probably could skip all of the above and just use np.nanmean below, but whatever
     mu = np.mean(flux)
     flux = (flux / mu - 1)
     if flux_err is not None: flux_err = flux_err / mu
@@ -265,56 +287,113 @@ def period_graph(target_name, lc_df, flux_type, LS_res, LS_periodogram, AC_res, 
     # AC_height = np.max(AC_power) - np.min(AC_power)
     
     #make plots
-
-    fig = plt.figure(figsize=(15,12))
-    gridspec.GridSpec(3,2)
+    sector_list = np.unique(lc_df['sector'].to_numpy())
     
     ### PLOT FULL LC
-    plt.subplot2grid((3,2), (0,0), colspan = 2)
+    fig = plt.figure(figsize = (15,12))
+    outer = gridspec.GridSpec(2, 1,figure = fig,height_ratios = [1,3])
+    spec1 = gridspec.GridSpecFromSubplotSpec(1,len(sector_list),subplot_spec = outer[0],wspace=0.1)
+    spec2 = gridspec.GridSpecFromSubplotSpec(2,2,subplot_spec = outer[1], hspace = 0.2)
     
-    sector_list = np.unique(lc_df['sector'].to_numpy())
-    for i,sector in enumerate(sector_list):
-        
-        time = lc_df[lc_df['sector'] == sector]['time']
-        flux = lc_df[lc_df['sector'] == sector][flux_type]
-        
-        bin_flux,bin_time,bin_idx = bin_stat(x=time,values=flux,statistic = 'median', bins = round(0.05*len(time)))
-        bin_time = bin_time[0:len(bin_time)-1]
-              
-        if flux_type != 'cpm':
-            bin_flux = bin_flux/np.nanmedian(bin_flux)
-            flux = flux/np.median(flux) 
-            plt.scatter(time,flux, s = 0.75, label = sector)
-            plt.plot(bin_time,bin_flux, c = 'black', linewidth = 1)#, c = c_sector[i])
-        if flux_type == 'cpm':
-            plt.scatter(time,flux, s = 1, label = sector)#, c = c_sector[i])
-            #plt.plot(bin_time,bin_flux, c = 'black', linewidth = 1)
+    axs = []
+    for i in range(len(sector_list)):
+        if i == 0: axs.append(fig.add_subplot(spec1[0,i]))
+        if i>0: axs.append(fig.add_subplot(spec1[0,i],sharey=axs[i-1])) 
+    row2ax1 = fig.add_subplot(spec2[0,0])   
+    row2ax2 = fig.add_subplot(spec2[0,1])
+    row3ax1 = fig.add_subplot(spec2[1,0])
+    row3ax2 = fig.add_subplot(spec2[1,1])
+    plt.tight_layout()
     
-    if flux_type == 'cpm':
-        plt.ylim((-0.15,0.15))
-    plt.xlabel("Time (days)")
-    plt.ylabel("Normalized Flux")
-    plt.legend(loc = 'upper right', fontsize = 'xx-large')
-    plt.title(str(flux_type) + "Light Curve of " + str(target_name))
+    d = .015
+
+    #plot all sectors on all axes
+    flux_max = []
+    flux_min = []
+    for j,ax in enumerate(axs):
+        for i,sector in enumerate(sector_list):  
+            temp_lc_df = lc_df[lc_df['sector'] == sector]
+            if type(temp_lc_df['time'].to_numpy()[0]) == np.datetime64:  
+                time = Time(temp_lc_df['time']).jd
+            else:
+                time = temp_lc_df['time'].to_numpy(dtype = 'float')
+            flux = temp_lc_df[flux_type].to_numpy(dtype = 'float')
+            
+            bin_flux,bin_time,bin_idx = bin_stat(x=time,values=flux,statistic = 'median', bins = round(0.05*len(time)))
+            bin_time = bin_time[0:len(bin_time)-1]
+                  
+            if flux_type != 'cpm':
+                bin_flux = bin_flux/np.nanmedian(bin_flux)
+                flux = flux/np.nanmedian(flux)
+                ax.scatter(time,flux, s = 0.75, label = 'Sector ' + str(sector))
+                ax.plot(bin_time,bin_flux, c = 'black', linewidth = 1)#, c = c_sector[i])
+                
+                if j == 0:
+                    flux_max.append(np.percentile(a = flux, q = 98))
+                    flux_min.append(np.percentile(a = flux, q = 2))
+                
+            if flux_type == 'cpm':
+                ax.scatter(time,flux, s = 1, label = sector)#, c = c_sector[i])
+                #plt.plot(bin_time,bin_flux, c = 'black', linewidth = 1)
+            if j== int(round(len(sector_list)/2)) - 1:    
+                if flux_type == 'sap_flux':
+                    ax.set_title("SAP Light Curve of " + str(target_name), loc = 'left')
+                if flux_type == 'pdcsap_flux':
+                    ax.set_title("PDCSAP Light Curve of " + str(target_name))
+                if flux_type == 'cpm':
+                    ax.set_title("CPM Light Curve of " + str(target_name))
+            if j == int(round(len(sector_list))) - 1:
+                ax.legend(loc = 'upper right', fontsize = 'x-large')
+                
+    for i,(ax,sector) in enumerate(zip(axs,sector_list)):
+        temp_lc_df = lc_df[lc_df['sector'] == sector]
+        if type(temp_lc_df['time'].to_numpy()[0]) == np.datetime64:  
+            time = Time(temp_lc_df['time']).jd
+        else:
+            time = temp_lc_df['time'].to_numpy(dtype = 'float')
+        ax.set_xlim([np.min(time), np.max(time)])
+        #ax.set_ylim([np.nanmax(flux_min),np.nanmin(flux_max)])
+        if flux_type == 'cpm': ax.set_ylim((-0.25,0.25))
+        if i==0: ax.set_ylabel("Normalized Flux")
+        if i== int(round(len(sector_list)/2)): 
+            ax.set_xlabel("Time (JD)", loc = 'left')
+        
+        if (i+1) < len(axs) :
+            axs[i].spines['right'].set_visible(False)
+            axs[i+1].tick_params(left=False,right = False)
+            axs[i+1].spines['left'].set_visible(False)        
+            #axs[i+1].yaxis.tick_right()
+            axs[i+1].tick_params(labelleft=False)  # don't put tick labels on the right
+            #axs[i+1].set_yticks([])
+            kwargs = dict(transform=axs[i].transAxes, color='k', clip_on=False)
+            axs[i].plot((1 - d, 1 + d), (-d, +d), **kwargs)
+            kwargs.update(transform=axs[i+1].transAxes)
+            axs[i+1].plot((-d, +d), (-d, +d), **kwargs)
+        
+
+    #plt.legend(loc = 'upper right', fontsize = 'x-large')    
     
     ### PLOT LS periodograms
-
-    plt.subplot2grid((3,2), (1,0),colspan=1)
+    
+    #row2ax1 = fig.add_subplot(spec2[1,0:int(round(len(sector_list)/2))])
+    
+    #plt.subplot2grid((3,2), (1,0),colspan=1)
+    #fig.add_subplot(2,2,1)
     
     for i,sector in enumerate(sector_list):
         LS_results = LS_res[LS_res['sector'] == sector]
         
-        period = LS_periodogram[LS_periodogram['sector'] == sector]['period']
-        power = LS_periodogram[LS_periodogram['sector'] == sector]['power']
+        period = LS_periodogram[LS_periodogram['sector'] == str(sector)]['period']
+        power = LS_periodogram[LS_periodogram['sector'] == str(sector)]['power']
         
 #            ymax1 = LS_results['LS_Power1'].to_numpy()[0]/(1.05*LS_results['LS_Power1'].to_numpy()[0])
 #            ymax2 = LS_results['LS_Power2'].to_numpy()[0]/(1.05*LS_results['LS_Power1'].to_numpy()[0])
 #            ymax3 = LS_results['LS_Power3'].to_numpy()[0]/(1.05*LS_results['LS_Power1'].to_numpy()[0])
 #            
-        plt.plot(period,power)#,c = c_sector[i])
-        plt.scatter(LS_results['LS_Per1'],LS_results['LS_Power1'], c = 'r')
-        plt.scatter(LS_results['LS_Per2'],LS_results['LS_Power2'], c = 'r')
-        plt.scatter(LS_results['LS_Per3'],LS_results['LS_Power3'], c = 'r')
+        row2ax1.plot(period,power)#,c = c_sector[i])
+        row2ax1.scatter(LS_results['LS_Per1'],LS_results['LS_Power1'], c = 'r')
+        row2ax1.scatter(LS_results['LS_Per2'],LS_results['LS_Power2'], c = 'r')
+        row2ax1.scatter(LS_results['LS_Per3'],LS_results['LS_Power3'], c = 'r')
 #            plt.axvline(x=LS_results['LS_Per1'].to_numpy()[0], ymin=0.01,ymax = ymax1, c= 'r', linewidth = 4)
 #            plt.axvline(x=LS_results['LS_Per2'].to_numpy()[0], ymin=0.01,ymax = ymax2, c= 'r', linewidth = 2)
 #            plt.axvline(x=LS_results['LS_Per3'].to_numpy()[0], ymin=0.01,ymax = ymax3, c= 'r', linewidth = 1)
@@ -329,15 +408,18 @@ def period_graph(target_name, lc_df, flux_type, LS_res, LS_periodogram, AC_res, 
     else:
         best_per = best_sector = row_idx = np.nan
     
-    plt.xlim((0,15))
+    row2ax1.set_xlim((0,15))
     #plt.ylim((0,1))
-    plt.xlabel("Period (days)")
-    plt.ylabel("LS Power")
-    plt.title("LS Period = " + str(round(best_per,4)) + " - Found in Sector" + str(best_sector))
+    row2ax1.set_xlabel("Period (days)", loc = 'right')
+    row2ax1.set_ylabel("LS Power")
+    row2ax1.set_title("LS Period = " + str(round(best_per,4)) + " - Found in Sector" + str(best_sector))
 
     ### PLOT AC PERIODOGRAMS
     
-    plt.subplot2grid((3,2), (1,1),colspan=1)
+    #plt.subplot2grid((3,2), (1,1),colspan=1)
+    #fig.add_subplot(2,2,2)
+    #row2ax2 = fig.add_subplot(spec2[1,int(round(len(sector_list)/2)):])
+    
     
     for key in AC_periodogram:
         # nan_test = sum(np.isnan(self.lc_df[self.lc_df['sector'] == sector][self.flux_type].to_numpy(dtype = 'float')))
@@ -347,11 +429,11 @@ def period_graph(target_name, lc_df, flux_type, LS_res, LS_periodogram, AC_res, 
         period = AC_periodogram[key]['Period']
         power = AC_periodogram[key]['AC Power']
         #print(AC_results)
-        plt.plot(period,power)#, c = c_sector[i])
+        row2ax2.plot(period,power)#, c = c_sector[i])
 #             plt.scatter(AC_results['AC_Per1'],AC_results['AC_Power1'], c = 'r')
 #             plt.scatter(AC_results['AC_Per2'],AC_results['AC_Power2'], c = 'r')
 #             plt.scatter(AC_results['AC_Per3'],AC_results['AC_Power3'], c = 'r')
-        plt.axvline(x=AC_results['ac_period'][0],color = 'red', ymin=0.01, ymax = 0.99, linewidth = 4)
+        row2ax2.axvline(x=AC_results['ac_period'][0],color = 'red', ymin=0.01, ymax = 0.99, linewidth = 4)
 #            plt.axvline(x=AC_results['AC_Per2'],color = 'red', ymin=0.01, ymax = (AC_results['AC_Power2'] - np.min(AC_power))/(AC_height + 0.05*AC_height), linewidth = 2)
 #            plt.axvline(x=AC_results['AC_Per3'],color = 'red', ymin=0.01, ymax = (AC_results['AC_Power3'] - np.min(AC_power))/(AC_height + 0.05*AC_height), linewidth = 1)
     
@@ -363,7 +445,10 @@ def period_graph(target_name, lc_df, flux_type, LS_res, LS_periodogram, AC_res, 
         ac_title = ac_title + 'Sector ' + str(key) + ' : ' + str(round(AC_results['ac_period'][0],2)) + ' d'
     
     if len(AC_res['ac_period']) >= 1: 
-        assoc_AC_per = AC_res[AC_res['sector'] == best_sector]['ac_period'][0]
+        if str(best_sector) == 'nan':
+            assoc_AC_per = AC_res['ac_period'].iloc[0]
+        else:            
+            assoc_AC_per = AC_res[AC_res['sector'] == best_sector]['ac_period'][0]
     else:
         assoc_AC_per = np.nan
     # if np.isnan(row_idx) == False:
@@ -371,21 +456,29 @@ def period_graph(target_name, lc_df, flux_type, LS_res, LS_periodogram, AC_res, 
     # else:
     #     assoc_AC_per = np.nan
     
-    plt.xlim((0,15))
+    ac_title = 'Associated AC Period: ' + str(round(assoc_AC_per,3)) + ' d'
+    
+    row2ax2.set_xlim((0,15))
     #plt.ylim((0,1))
-    plt.xlabel("Period (days)")
-    plt.ylabel("AC Power")
-    plt.title(ac_title)
+    row2ax2.set_xlabel("Period (days)", loc = 'right')
+    row2ax2.set_ylabel("AC Power")
+    row2ax2.set_title(ac_title)
     
     ### PLOT PHASE PHOLDED CURVES FOR BEST SECTOR
+    if str(best_sector) == 'nan': best_sector = sector_list[0]
+    if flux_type != 'cpm':
+        time_best_sector = lc_df[lc_df['sector'] == int(best_sector)]['time']
+        flux_best_sector = lc_df[lc_df['sector'] == int(best_sector)][flux_type].to_numpy(dtype = 'float')
+    else:
+        time_best_sector = lc_df[lc_df['sector'] == str(best_sector)]['time']
+        flux_best_sector = lc_df[lc_df['sector'] == str(best_sector)][flux_type].to_numpy(dtype = 'float')
     
-    time_best_sector = lc_df[lc_df['sector'] == best_sector]['time'].to_numpy(dtype = 'float')
-    flux_best_sector = lc_df[lc_df['sector'] == best_sector][flux_type].to_numpy(dtype = 'float')
-    
-    bin_flux,bin_time,bin_idx = bin_stat(x=time_best_sector,values=flux_best_sector,statistic = 'median', bins = round(0.05*len(time)))
+    if type(time_best_sector.to_numpy()[0]) == np.datetime64: time_best_sector = Time(time_best_sector).jd
+
+    bin_flux,bin_time,bin_idx = bin_stat(x=time_best_sector,values=flux_best_sector,statistic = 'median', bins = round(0.05*len(time_best_sector)))
     bin_time = bin_time[0:len(bin_time)-1]
     bin_flux = bin_flux/np.nanmedian(bin_flux)
-    flux = flux/np.median(flux)    
+    #flux = flux/np.median(flux)    
     
     #normalized phases arrays
    
@@ -409,37 +502,44 @@ def period_graph(target_name, lc_df, flux_type, LS_res, LS_periodogram, AC_res, 
     
     # LS phase fold
 
-    plt.subplot2grid((3,2), (2,0),colspan=1)
+    #plt.subplot2grid((3,2), (2,0),colspan=1)
+    #fig.add_subplot(3,2,1)
+    #row3ax1 = fig.add_subplot(spec[2,0:int(round(len(sector_list)/2))])
+    
     first=0
     if (flux_type == 'cpm') | (flux_type == 'fcor'):
         for change in c1:
-            plt.scatter(phase_norm_LS[first:change],flux_best_sector[first:change])
+            row3ax1.scatter(phase_norm_LS[first:change],flux_best_sector[first:change])
             first=change+1
     else:
         for change in c1:
-            plt.scatter(phase_norm_LS[first:change],bin_flux[first:change])
+            row3ax1.scatter(phase_norm_LS[first:change],bin_flux[first:change])
             first=change+1
-    plt.xlabel("Fraction of Period")
-    plt.ylabel("Normalized Flux")
-    plt.title("LS Phase-Folded - Sector " + str(best_sector))
+    row3ax1.set_xlabel("Fraction of Period")
+    row3ax1.set_ylabel("Normalized Flux")
+    row3ax1.set_title("LS Phase-Folded - Sector " + str(best_sector), loc = 'left')
     
     # AC phase fold
 
-    plt.subplot2grid((3,2), (2,1),colspan=1)
+    #plt.subplot2grid((3,2), (2,1),colspan=1)
+    #fig.add_subplot(3,2,2)
+    #row3ax2 = fig.add_subplot(spec[2,int(round(len(sector_list)/2)):])
+    
     first = 0
     if (flux_type == 'cpm') | (flux_type == 'fcor'):
         for change in c2:
-            plt.scatter(phase_norm_AC[first:change],flux_best_sector[first:change])
+            row3ax2.scatter(phase_norm_AC[first:change],flux_best_sector[first:change])
             first=change+1
     else:
         for change in c2:
-            plt.scatter(phase_norm_AC[first:change],bin_flux[first:change])
+            row3ax2.scatter(phase_norm_AC[first:change],bin_flux[first:change])
             first=change+1        
-    plt.xlabel("Fraction of Period")
-    plt.ylabel("Normalized Flux")
-    plt.title("AC Phase-Folded")
+    row3ax2.set_xlabel("Fraction of Period")
+    row3ax2.set_ylabel("Normalized Flux")
+    row3ax2.set_title("AC Phase-Folded", loc = 'left')
     
     fig.tight_layout()
+    plt.subplots_adjust(hspace = 0.2)
     plt.close(fig=fig)
     
     
