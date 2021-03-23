@@ -37,7 +37,7 @@ class Group:
     #def add_final_rots():
         #condition on rots_summary
     
-    def add_pc_seq_fig(fig)#flux_type = 'cpm', color = 'bp_rp', final_rots_col = None,color_bar_kwrgs=None)
+    def add_pc_seq_fig(fig):#flux_type = 'cpm', color = 'bp_rp', final_rots_col = None,color_bar_kwrgs=None)
         self.pc_seq_fig = fig
     #     import matplotlib.pyplot as plt
         
