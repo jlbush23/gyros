@@ -11,7 +11,25 @@ import os
 import shutil
 import pickle as pkl
 
+import numpy as np
+import pandas as pd
+
 from NASA_LCs.Target import Target
+
+def create_target_dict(pickle_folder):
+    target_list = os.listdir(pickle_folder)
+    target_dict = {}
+    for i,fn in enumerate(target_list):
+        print("Adding object " + str(i+1) + "/" + str(len(target_list)) + ".")
+        tic = fn.split(".")[0].split("tic")[1]
+        file_path = os.path.join(pickle_folder,fn)
+        with open(file_path,'rb') as infile:
+            targ = pkl.load(infile)
+        target_dict[tic] = targ
+
+    return(target_dict)            
+    
+#def create_group_pc_seq_dict():
 
 def save_group_object(group_object,filepath):
     with open(filepath,'wb') as outfile:
@@ -79,7 +97,9 @@ def bulk_download(tic_list, download_dir, lc_types = ['spoc','cpm'],
         
     return(target_dict)
 
-def best_tess_rots(target_dict):
+def best_tess_rots(target_dict,lc_types = ['spoc','cpm']):
+    
+    ## somehow feed a dict of rot dicts instead?
     
     if 'spoc' in lc_types: 
         best_sap_rots = []
@@ -87,7 +107,7 @@ def best_tess_rots(target_dict):
     if 'cpm' in lc_types: best_cpm_rots =[]
     
     for tic in target_dict.keys():
-        targ = target_dic[tic]
+        targ = target_dict[tic]
         
         if ('cpm_rot_dict' in targ.available_attributes) & ('cpm' in lc_types):
             cpm_LS_res = targ.cpm_rot_dict['LS_res']
@@ -125,7 +145,7 @@ def best_tess_rots(target_dict):
         best_cpm_rots_df['perc_err'] = np.divide(best_cpm_rots_df['LS_Per1'],best_cpm_rots_df['ac_period'])
         best_cpm_rots_df['perc_err_match'] = (best_cpm_rots_df['perc_err'] < 1.1) & (best_cpm_rots_df['perc_err'] > 0.9)
         
-        best_rots_dict['cpm'] = best_cpm_rots
+        best_rots_dict['cpm'] = best_cpm_rots_df
     if 'spoc' in lc_types: 
         best_sap_rots_df = pd.concat(best_sap_rots)
         best_sap_rots_df['perc_err'] = np.divide(best_sap_rots_df['LS_Per1'],best_sap_rots_df['ac_period'])
@@ -135,8 +155,8 @@ def best_tess_rots(target_dict):
         best_pdc_rots_df['perc_err'] = np.divide(best_pdc_rots_df['LS_Per1'],best_pdc_rots_df['ac_period'])
         best_pdc_rots_df['perc_err_match'] = (best_pdc_rots_df['perc_err'] < 1.1) & (best_pdc_rots_df['perc_err'] > 0.9)
         
-        best_rots_dict['sap'] = best_sap_rots
-        best_rots_dict['pdc'] = best_pdc_rots
+        best_rots_dict['sap'] = best_sap_rots_df
+        best_rots_dict['pdc'] = best_pdc_rots_df
         
         
     return(best_rots_dict)

@@ -155,6 +155,54 @@ def get_tic(ra,dec):
         #self.tic = tic
     return(tic)
 
+def get_TIC_data_bulk(query_df,ra_col_name = 'ra', dec_col_name = 'dec'):
+    tics = []
+    TIC_dfs = []
+    for i,row in query_df.iterrows():
+        print("Finding TIC data for object " + str(i+1) + "/" + str(len(query_df)) + ".")
+        if (str(row[ra_col_name]) == 'nan') | (str(row[dec_col_name]) == 'nan'):
+            print("No coordinates provided for this object.")
+            tics.append(np.nan)
+            TIC_dfs.append(np.nan)
+        else:
+            temp_TIC_df, temp_tic = get_TIC_data(ra = row[ra_col_name],dec = row[dec_col_name])
+            tics.append(temp_tic)
+            TIC_dfs.append(temp_TIC_df)
+    
+    query_df.insert(loc = 0, column = 'tic', value = tics)
+    TIC_query = pd.concat(TIC_dfs)
+    return(tics, TIC_query)#,query_df)
+
+def get_TIC_data(ra,dec):
+    radii = np.linspace(start = 0.0001, stop = 0.001, num = 19)
+    #for i,row in self.df.iterrows():
+    tic_found = False
+    for rad in radii:
+        if tic_found == False:
+            query_string = str(ra) + " " + str(dec) # make sure to have a space between the strings!#SkyCoord(ra = row['ra'], dec = row['dec'], frame = 'icrs') str(row['ra']) + " " + str(row['dec']) # make sure to have a space between the strings!
+            obs_table = Catalogs.query_region(coordinates = query_string, radius = rad*u.deg, catalog = "TIC")
+            obs_df = obs_table.to_pandas()
+            if len(obs_table['ID']) == 1:
+                tic = obs_table['ID'][0]
+                tic_found = True
+                continue
+            if len(obs_df[obs_df['GAIA'].to_numpy(dtype = 'str') != '']) == 1:
+                temp_obs_df = obs_df[obs_df['GAIA'].to_numpy(dtype = 'str') != '']
+                tic = temp_obs_df['ID'].iloc[0]
+                tic_found = True
+                continue
+            if len(np.unique(obs_df[obs_df['HIP'].to_numpy(dtype = 'str') != '']['HIP'])) == 1:
+                tic = obs_table['ID'][0]
+                tic_found = True
+                continue
+    if tic_found == False:
+        tic = np.nan
+        print("Didn't find TIC for this object.")
+    else:
+        print("Found TIC Data for TIC" + str(tic) + "!")
+        #self.tic = tic
+    return(obs_df,tic)
+
 # def get_tic_w_gaia(self,row):
 #     rad = 0.005
 #     #for i,row in self.df.iterrows():
