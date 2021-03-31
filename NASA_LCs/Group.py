@@ -17,9 +17,13 @@ class Group:
         self.name = str(name)
         self.group_df = group_df
         
-    def add_tics(self,ra_col_name = 'ra',dec_col_name = 'dec'):
-        self.tics = catQ.get_tic_bulk(query_df = self.group_df,
-                                      ra_col_name = ra_col_name, dec_col_name = dec_col_name)
+    def add_tics(self,ra_col_name = 'ra',dec_col_name = 'dec', tic_col_name = None):
+        if tic_col_name is not None:
+            self.tics = self.group_df[tic_col_name].to_numpy(dtype = 'str')
+        else:
+            self.tics = catQ.get_tic_bulk(query_df = self.group_df,
+                                          ra_col_name = ra_col_name, dec_col_name = dec_col_name)
+            
     def add_TIC_info(self, ra_col_name = 'ra', dec_col_name = 'dec'):
         self.tics,self.TIC_query = catQ.get_TIC_data_bulk(query_df = self.group_df,
                                                           ra_col_name = ra_col_name, 
