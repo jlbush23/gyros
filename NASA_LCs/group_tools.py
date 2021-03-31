@@ -144,16 +144,50 @@ def best_tess_rots(target_dict,lc_types = ['spoc','cpm']):
         best_cpm_rots_df = pd.concat(best_cpm_rots)
         best_cpm_rots_df['perc_err'] = np.divide(best_cpm_rots_df['LS_Per1'],best_cpm_rots_df['ac_period'])
         best_cpm_rots_df['perc_err_match'] = (best_cpm_rots_df['perc_err'] < 1.1) & (best_cpm_rots_df['perc_err'] > 0.9)
+        best_cpm_rots_df['alias'] = ((best_cpm_rots_df['perc_err'] < 0.55) & (best_cpm_rots_df['perc_err'] > 0.45)) | ((best_cpm_rots_df['perc_err'] < 2.05) & (best_cpm_rots_df['perc_err'] > 1.95))
+        alias_type = []
+        for i,row in best_cpm_rots_df.iterrows():
+            if ((row['perc_err'] < 0.56) & (row['perc_err'] > 0.44)): 
+                alias_type.append("0.5x")
+            elif ((row['perc_err'] < 2.06) & (row['perc_err'] > 1.94)): 
+                alias_type.append("2x")
+            else:
+                alias_type.append(np.nan)
+        best_cpm_rots_df['alias_type'] = alias_type
+        best_cpm_rots_df['rot_avail'] = best_cpm_rots_df['perc_err_match'] | best_cpm_rots_df['alias']
         
         best_rots_dict['cpm'] = best_cpm_rots_df
+        
     if 'spoc' in lc_types: 
         best_sap_rots_df = pd.concat(best_sap_rots)
         best_sap_rots_df['perc_err'] = np.divide(best_sap_rots_df['LS_Per1'],best_sap_rots_df['ac_period'])
         best_sap_rots_df['perc_err_match'] = (best_sap_rots_df['perc_err'] < 1.1) & (best_sap_rots_df['perc_err'] > 0.9)
+        best_sap_rots_df['alias'] = ((best_sap_rots_df['perc_err'] < 0.55) & (best_sap_rots_df['perc_err'] > 0.45)) | ((best_sap_rots_df['perc_err'] < 2.05) & (best_sap_rots_df['perc_err'] > 1.95))
+        alias_type = []
+        for i,row in best_sap_rots_df.iterrows():
+            if ((row['perc_err'] < 0.56) & (row['perc_err'] > 0.44)): 
+                alias_type.append("0.5x")
+            elif ((row['perc_err'] < 2.06) & (row['perc_err'] > 1.94)): 
+                alias_type.append("2x")
+            else:
+                alias_type.append(np.nan)
+        best_sap_rots_df['alias_type'] = alias_type
+        best_sap_rots_df['rot_avail'] = best_sap_rots_df['perc_err_match'] | best_sap_rots_df['alias']
 
         best_pdc_rots_df = pd.concat(best_pdc_rots)
         best_pdc_rots_df['perc_err'] = np.divide(best_pdc_rots_df['LS_Per1'],best_pdc_rots_df['ac_period'])
         best_pdc_rots_df['perc_err_match'] = (best_pdc_rots_df['perc_err'] < 1.1) & (best_pdc_rots_df['perc_err'] > 0.9)
+        best_pdc_rots_df['alias'] = ((best_pdc_rots_df['perc_err'] < 0.55) & (best_pdc_rots_df['perc_err'] > 0.45)) | ((best_pdc_rots_df['perc_err'] < 2.05) & (best_pdc_rots_df['perc_err'] > 1.95))
+        alias_type = []
+        for i,row in best_pdc_rots_df.iterrows():
+            if ((row['perc_err'] < 0.56) & (row['perc_err'] > 0.44)): 
+                alias_type.append("0.5x")
+            elif ((row['perc_err'] < 2.06) & (row['perc_err'] > 1.94)): 
+                alias_type.append("2x")
+            else:
+                alias_type.append(np.nan)
+        best_pdc_rots_df['alias_type'] = alias_type
+        best_pdc_rots_df['rot_avail'] = best_pdc_rots_df['perc_err_match'] | best_pdc_rots_df['alias']
         
         best_rots_dict['sap'] = best_sap_rots_df
         best_rots_dict['pdc'] = best_pdc_rots_df
