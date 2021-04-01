@@ -195,7 +195,7 @@ def best_tess_rots(target_dict,lc_types = ['spoc','cpm']):
         
     return(best_rots_dict)
 
-def pc_seq_fig(color_type = 'bp_rp', pleiades_on = True, praesepe_on = True, hyades_on = True, upper_sco_on = False, xlim = (0.05,3.5), guidelines_on = False):
+def pc_seq_fig(ax, color_type = 'bp_rp', pleiades_on = True, praesepe_on = True, hyades_on = True, upper_sco_on = False, xlim = (0.05,3.5), guidelines_on = False):
     import matplotlib.pyplot as plt
     import matplotlib as mpl
     import pandas as pd
@@ -284,36 +284,37 @@ def pc_seq_fig(color_type = 'bp_rp', pleiades_on = True, praesepe_on = True, hya
             smoothed_PRA_roll[i] = sum(roll_med_PRA * kernel)
     
     ####### YES and Qmarks Only
-    fig = plt.figure(figsize = (7,7))
+    #fig = plt.figure(figsize = (7,7))
     
     if pleiades_on == True:
-        plt.scatter(pleades_single_color, pleades_single_period, c = 'deepskyblue',
+        ax.scatter(pleades_single_color, pleades_single_period, c = 'deepskyblue',
                     edgecolors = 'black', s=50,marker = 'o',alpha = 0.35, 
                     label = 'Pleiades - 100 Myr')
     if praesepe_on == True:
-        plt.scatter(praes_color, praes_period, c = 'purple',s=50, marker = 's', 
+        ax.scatter(praes_color, praes_period, c = 'purple',s=50, marker = 's', 
                     alpha = 0.25, label = 'Praesepe - 625 Myr')
     if guidelines_on == True:
         import matplotlib.patheffects as pe
-        plt.plot(PLE_plot['color'],smoothed_PLE_roll, '--',c = 'deepskyblue', linewidth = 3, path_effects=[pe.Stroke(linewidth=6, foreground='k'), pe.Normal()])
-        plt.plot(PRA_plot['color'],smoothed_PRA_roll, '--', c = 'purple', linewidth = 3, path_effects=[pe.Stroke(linewidth=6, foreground='k'), pe.Normal()])
+        ax.plot(PLE_plot['color'],smoothed_PLE_roll, '--',c = 'deepskyblue', linewidth = 3, path_effects=[pe.Stroke(linewidth=6, foreground='k'), pe.Normal()])
+        ax.plot(PRA_plot['color'],smoothed_PRA_roll, '--', c = 'purple', linewidth = 3, path_effects=[pe.Stroke(linewidth=6, foreground='k'), pe.Normal()])
     if hyades_on == True:
-        plt.scatter(hyades_df['bp_rp'],hyades_df['rotation'], c = 'darkgreen', 
+        ax.scatter(hyades_df['bp_rp'],hyades_df['rotation'], c = 'darkgreen', 
                     marker = '^', s = 50, alpha = 0.85, edgecolors = 'black', 
                     label = 'Hyades - 625 Myr')
     if upper_sco_on == True:
-        plt.scatter(upper_sco_df['bp_rp'],upper_sco_df['P1'], c = 'grey',
+        ax.scatter(upper_sco_df['bp_rp'],upper_sco_df['P1'], c = 'grey',
                     marker = '^', s = 50, alpha = 0.8, edgecolors = 'black',
                     label = 'Upper Scorpius - 15 Myr')
     
-    plt.xlim(xlim)
-    plt.yscale('log')
-    plt.yticks(ticks = [0.1,1,10,25], labels = ['0.1','1','10','25'])
-    plt.xlabel("Color (BP-RP)")
-    plt.ylabel("Period (d)")
-    plt.legend(loc = 'lower left', framealpha = 0.6, fancybox = False, fontsize=16)
+    ax.set_xlim(xlim)
+    ax.set_yscale('log')
+    ax.set_yticks(ticks = [0.1,1,10,25])
+    ax.set_yticklabels(labels = ['0.1','1','10','25'])
+    ax.set_xlabel("Color (BP-RP)")
+    ax.set_ylabel("Period (d)")
+    ax.legend(loc = 'lower left', framealpha = 0.6, fancybox = False, fontsize=16)
     
-    return(fig)
+    return(ax)
             
         
             
