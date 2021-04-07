@@ -416,6 +416,8 @@ def get_gaia_data(ra,dec,gaia_kwrgs):
             gaia_nan = [np.repeat(a = np.nan, repeats = len(gaia_kwrgs))]
             gaia_df = pd.DataFrame(data = gaia_nan, columns = gaia_kwrgs)
         return(gaia_df)
+    
+
 
 # def roll_columns(self,df,num_roll):
 #     cols_rolled = np.roll(df.columns.to_numpy(dtype = 'str'),shift = num_roll)
