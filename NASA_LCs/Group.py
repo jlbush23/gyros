@@ -7,15 +7,19 @@ Created on Thu Mar 18 15:09:29 2021
 import pandas as pd
 import numpy as np
 
+import matplotlib.pyplot as plt
+
 import os
 
 import NASA_LCs.group_tools as gt
 import NASA_LCs.catalog_queries as catQ
 
 class Group:
-    def __init__(self,name,group_df):
+    def __init__(self,name,group_df,group_toi_dict):
         self.name = str(name)
         self.group_df = group_df
+        self.group_toi_dict = group_toi_dict
+        self.attributes_list = []
         
     def add_tics(self,ra_col_name = 'ra',dec_col_name = 'dec', tic_col_name = None):
         if tic_col_name is not None:
@@ -23,21 +27,27 @@ class Group:
         else:
             self.tics = catQ.get_tic_bulk(query_df = self.group_df,
                                           ra_col_name = ra_col_name, dec_col_name = dec_col_name)
-            
+        self.attributes_list.append('tics')
     def add_TIC_info(self, ra_col_name = 'ra', dec_col_name = 'dec'):
         self.tics,self.TIC_query = catQ.get_TIC_data_bulk(query_df = self.group_df,
                                                           ra_col_name = ra_col_name, 
                                                           dec_col_name = dec_col_name)
-    
-    def add_gaia_info(self, ra_col_name = 'ra', dec_col_name = 'dec', gaia_kwrgs = 'all', id_col_name = None):
+        self.TIC_query = self.TIC_query.rename(columns = {'ID':'tic'})
+        self.attributes_list.append('tics')
+        self.attributes_list.append('TIC_query')
+    def add_gaia_info(self, ra_col_name = 'ra', dec_col_name = 'dec', gaia_kwrgs = 'all', id_col_name = None, galactic_coords = True):
         self.gaia_query = catQ.get_gaia_data_bulk(query_df = self.group_df,
                                                  ra_col_name = ra_col_name, dec_col_name = dec_col_name,
                                                  gaia_kwrgs = gaia_kwrgs, id_col_name = id_col_name)        
-    
+        
+        if galactic_coords == True:
+            self.gaia_query = gt.add_gaia_galactic_coords(tic = self.group_toi_dict['tic'], gaia_query_df = self.gaia_query)
+            
+        self.attributes_list.append('gaia_query')    
     def add_tess_LCs(self,download_dir = None, lc_types = ['spoc','cpm']):
         ## need to expand to add spoc rots later
         tic_list = self.tics
-        target_dict = gt.bulk_download(tic_list = tic_list, download_dir = download_dir, lc_types = ['cpm'])
+        self.rots_dict_collection = gt.bulk_download(tic_list = tic_list, download_dir = download_dir, lc_types = ['cpm'])
         
         ## below could be used to update best_rots selection
         
@@ -63,32 +73,69 @@ class Group:
         #             self.pdc_rot_container[tic] = target.pdc_rot_dict
         #         else:
         #             self.pdc_rot_container[tic] = None 
-                    
-        return(target_dict)
+        if 'spoc' in lc_types: self.attributes_list.append('spoc_LCs')
+        if 'cpm' in lc_types: self.attributes_list.append('cpm_LCs')
         
-    def rot_summary(self,target_dict,lc_types = ['spoc','cpm']):
-        self.best_rots_dict = gt.best_tess_rots(target_dict,lc_types)
+        self.attributes_list.append('rots_dict_collection')
+        
+        #return(target_dict)
+        
+    def rot_summary(self,lc_types = ['spoc','cpm'],tmag_list = None, cont_thresh = 0.7):
+        ## create best rots dict (needs updating to save memory and not rely on 
+        ## target_dict. possibly can rely on a rots_target_dict)
+        
+        ##UPDATE: fixed to rely on rots_target_dict!!!
+        self.best_rots_dict = gt.best_tess_rots(rots_dict_collection = self.rots_dict_collection,
+                                                lc_types = lc_types)
+        
+        ## add tmag summary for each lc_type
+        if tmag_list is not None: 
+            self.tmag_summary_dict = {}
+            for lc_type in lc_types:
+                temp_rot_df = self.best_rots_dict[lc_type]
+                temp_rot_df = temp_rot_df.merge(right = self.TIC_query, on = 'tic', how = 'left').drop_duplicates(subset = ['tic'])
+                temp_tmag_table,temp_tmag_summary = gt.add_Tmag_rot_summary(best_rots = temp_rot_df,
+                                                                            cont_thresh = cont_thresh,
+                                                                            tmag_list = tmag_list)
+                self.tmag_summary_dict[lc_type] = {'tmag_table':temp_tmag_table,
+                                                   'tmag_summary':temp_tmag_summary}
+        
+        self.attributes_list.append('best_rots_dict')
+        self.attributes_list.append('tmag_summary_dict')
         
     #def add_final_rots():
         #condition on rots_summary
     
-    def add_pc_seq_fig(fig):#flux_type = 'cpm', color = 'bp_rp', final_rots_col = None,color_bar_kwrgs=None)
-        self.pc_seq_fig = fig
-    #     import matplotlib.pyplot as plt
+    def add_pc_seq_fig(self,group_type = 'ff', lc_type = 'cpm'):#flux_type = 'cpm', color = 'bp_rp', final_rots_col = None,color_bar_kwrgs=None)
+        ## create plot df
+        best_rots_df = self.best_rots_dict[lc_type]
+        plot_df = self.group_df.merge(right = best_rots_df, on = 'tic', how = 'left').drop_duplicates(subset = ['tic'])
+        plot_df = plot_df.merge(right = self.TIC_query, on = 'tic', how = 'left').drop_duplicates(subset = ['tic'])
+        gaia_query_df = self.gaia_query.drop(columns = ['ra','dec'])
+        plot_df = plot_df.merge(right = gaia_query_df, on = 'tic', how = 'left').drop_duplicates(subset = ['tic'])
         
-    #     best_rots_df = self.best_rots_dict[flux_type]
-    #     best_rots_merge = self.group_df.merge(right = best_rots_df, on = 'tic', how = 'left')
-    #     best_rots_
-    #     if final_rots_col is None:
-    #         eff_temp = best_rots_merge[color]
-    #         period = best_rots_merge['LS_Per1']
-    
-    #     fig = gt.pc_seq_fig(praesepe_on = False, hyades_on = False, upper_sco_on = True, xlim = (0.05,4.5))
-        
-    #     if final_rots_col is None:
-    #         plt.scatter(best_rots_df['bp_rp'],best_rots_df['LS_Per1'], c = update_match_15['PROB'], cmap = "autumn", s = 80, alpha = 0.7, edgecolors = 'black')
-    #     plt.title("Eps Cha - BANYAN Rotations")
-    #     cbar = plt.colorbar()
-    #     cbar.ax.get_yaxis().labelpad = 25
-    #     cbar.ax.set_ylabel('BANYAN Probability', rotation=270)
-    #     plot_fn = os.path.join(proj_fold,'eps_cha_banyan.png')
+        if group_type == 'ff':
+            ## just ff pc seq first
+            ## NEEDS UPDATE - add one with just Tmag summary as second subplot
+            ## NEEDS UPDATE - add one with big pc_seq, xyz,pmdelta, and tmag_summary
+            fig_ff_pc_seq = plt.figure(figsize = (9,9))
+            ax = fig_ff_pc_seq.add_subplot()
+            if 'toi' in self.group_toi_dict.keys():
+                title = 'TOI ' + str(self.group_toi_dict['toi']) + ' - FF Rotations'
+            else:
+                title = None
+            gt.ff_pc_seq(ax,plot_df = plot_df, group_toi_dict = self.group_toi_dict,
+                                          title = title)
+            self.ff_pc_seq = fig_ff_pc_seq
+            plt.close(fig_ff_pc_seq)
+            
+            ## now add uvwxyz plot
+            tmag_summary = self.tmag_summary_dict[lc_type]
+            if 'toi' in self.group_toi_dict.keys():
+                toi_label = 'TOI ' + str(self.group_toi_dict['toi'])
+            else:
+                toi_label = None
+            self.ff_uvwxyz = gt.pc_seq_uvwxyz(plot_df = plot_df, tmag_summary_dict = tmag_summary,
+                                              group_toi_dict = self.group_toi_dict, toi_label = toi_label)
+            
+            
