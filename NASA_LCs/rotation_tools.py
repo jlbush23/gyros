@@ -248,7 +248,7 @@ def amp_multi_sector(lc_df,flux_type):
     return(amp_df)
 
 def measure_amp(flux):
-    amplitude = np.percentile(a = flux, q = 95) - np.percentile(a = flux, q = 5)
+    amplitude = np.nanpercentile(a = flux, q = 95) - np.nanpercentile(a = flux, q = 5)
     return(amplitude)
 
 def best_period(rot_df):
