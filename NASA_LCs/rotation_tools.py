@@ -353,7 +353,7 @@ def period_graph(target_name, lc_df, flux_type, LS_res, LS_periodogram, AC_res, 
             time = temp_lc_df['time'].to_numpy(dtype = 'float')
         ax.set_xlim([np.min(time), np.max(time)])
         #ax.set_ylim([np.nanmax(flux_min),np.nanmin(flux_max)])
-        if flux_type == 'cpm': ax.set_ylim((-0.25,0.25))
+        #if flux_type == 'cpm': ax.set_ylim((-0.25,0.25))
         if i==0: ax.set_ylabel("Normalized Flux")
         if i== int(round(len(sector_list)/2)): 
             ax.set_xlabel("Time (JD)", loc = 'left')
