@@ -105,6 +105,17 @@ class Group:
         
     #def add_final_rots():
         #condition on rots_summary
+    def save_plot_df(self,fn = None):
+        ## create plot df
+        best_rots_df = self.best_rots_dict[lc_type]
+        plot_df = self.group_df.merge(right = best_rots_df, on = 'tic', how = 'left').drop_duplicates(subset = ['tic'])
+        plot_df = plot_df.merge(right = self.TIC_query, on = 'tic', how = 'left').drop_duplicates(subset = ['tic'])
+        gaia_query_df = self.gaia_query.drop(columns = ['ra','dec'])
+        self.plot_df = plot_df.merge(right = gaia_query_df, on = 'tic', how = 'left').drop_duplicates(subset = ['tic']).reset_index(drop = True)
+        
+        if fn is not None:
+            self.plot_df.to_csv(fn, index = False)
+        
     
     def add_pc_seq_fig(self,group_type = 'ff', lc_type = 'cpm'):#flux_type = 'cpm', color = 'bp_rp', final_rots_col = None,color_bar_kwrgs=None)
         ## create plot df
