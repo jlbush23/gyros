@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 
 from NASA_LCs.Target import Target
+from NASA_LCs.Group import Group
 
 from uvwxyz.xyzuvw import xyz,uvw
 
@@ -616,4 +617,116 @@ def pc_seq_uvwxyz(plot_df, tmag_summary_dict, group_toi_dict, cont_thresh = 0.7,
     fig.tight_layout()
     return(fig)        
             
+def comove_ff_rotations(query_df,download_dir,vlim=5,srad=25,ff_lists_loc = None):
+    if ff_lists_loc is None:
+        import Comove
+        #query gaia for RVs
+        gaia_query_res = catQ.get_gaia_data_bulk(query_df = query_df,id_col_name = 'tic').rename(columns = {'ra':'ra_gaia','dec':'dec_gaia'})
+        query_df = query_df.merge(right = gaia_query_res, on = 'tic', how = 'left').drop_duplicates(subset=['tic']).reset_index(drop = True)
         
+        vlim=vlim #*u.kilometer/u.second ##km/s
+        srad=srad ##parsecs (spherical radius around target)
+    else: 
+        #get names of files
+        ff_lists_fns = os.listdir(ff_lists_loc)
+        TOIs_in_ff_lists = []
+        for fn in ff_lists_fns:
+            TOIS_in_ff_lists.append(fn.split(".")[0].split("toi")[1])
+
+    for i,row in query_df.iterrows():
+        toi = str(row['TOI']).split(".")[0]
+        print("Working on TOI " + toi + ", object "  + str(i+1) + "/" + str(len(comove_df2)) + ".")
+        tic = str(row['tic'])
+        targname = "TOI " + toi
+        
+        #make folder for TOI , and name subfolder for toi comove products
+        toi_folder = os.path.join(download_dir,'toi' + toi)
+        if os.path.exists(toi_folder) == False: os.mkdir(toi_folder)
+        
+        ff_product_folder = os.path.join(toi_folder,'ff_products/')
+        
+        ## run Comove if ff_lists not provided
+        if ff_lists_loc is None:
+            
+            rd = [row['ra']*(24/360),row['dec']]
+            radvel = row['radial_velocity']
+            if str(radvel) == 'nan': 
+                print("No radial velocity for this object in Gaia. Trying next TOI.")
+                continue
+            
+            try:
+                output_location = Comove.findfriends(targname,radvel,velocity_limit=vlim,search_radius=srad,radec=rd,output_directory=ff_product_folder,verbose=False,showplots=False)
+            except:
+                print("Comove didn't find enough comving friends. On to next TOI.")
+                continue
+            ## get Comove results
+            friends_fn = os.path.join(ff_product_folder,targname.replace(" ","") + ".txt")
+            friends_df = pd.read_csv(friends_fn, delim_whitespace=True).rename(columns = {'RA':'ra','DEC':'dec'})
+        else:
+            #read ff_lists that match TOI name
+            if toi in TOIs_in_ff_lists:
+                friends_fn = os.path.join(ff_lists_loc,'toi' + toi + '.txt')
+                friends_df = pd.read_csv(friends_fn, delim_whitespace=True).rename(columns = {'RA':'ra','DEC':'dec'})
+            else:
+                print("Could not find friend list for this TOI. Moving to next TOI.")
+                continue
+            
+        
+        
+        ## limit number of friends if len > 800
+        voff_list = [4.5,4,3.5,3,2.5,2]
+        for voff in voff_list:
+            if len(friends_df) < 800: break
+            friends_df = friends_df[friends_df['Voff(km/s)'] < voff].reset_index(drop = True)
+            
+        ## run group rotations with 'ff' settings
+        #create group toi dict
+        group_toi_dict = {'tic':tic,'toi':toi}
+        lc_download_dir = os.path.join(toi_folder,'lc_pickles')
+        
+        # run the run function
+        ff_group_run(group_toi_dict = group_toi_dict, download_dir = lc_download_dir,
+                     friends_df = friends_df, ff_product_folder = ff_product_folder)
+        
+def ff_group_run(group_toi_dict,download_dir,friends_df,ff_product_folder):
+    toi = group_toi_dict['toi']
+    tic = group_toi_dict['tic']
+    targname = "TOI " + toi
+    
+    #create group
+    group_fn = os.path.join(download_dir,'TOI' + toi + '_FFgroup.pkl')
+    group = Group(name = "TOI " + toi +  " FF", group_df = friends_df, group_toi_dict = group_toi_dict)
+    
+    # add TIC catalog info
+    group.add_TIC_info()
+    save_group_object(group,group_fn)
+    
+    #add lcs, save group with rotation_dict_collection
+    if os.path.exists(download_dir) == False: os.mkdir(download_dir)
+    group.add_tess_LCs(download_dir = download_dir, lc_types = ['cpm'])
+    save_group_object(group,group_fn)
+    
+    # add Gaia query    
+    group.add_gaia_info(id_col_name = 'tic')
+    save_group_object(group,group_fn)
+    
+    #organize best_rots, Tmag summary
+    group.rot_summary(lc_types = ['cpm'], tmag_list = [14,15,16,99])
+    save_group_object(group,group_fn)
+    
+    #add pc_seq, save group and save rotation images with ff_products
+    group.add_pc_seq_fig()
+    save_group_object(group,group_fn)
+    
+    pc_seq_fn = os.path.join(ff_product_folder,targname.replace(" ","") + "_pc_seq.png")
+    group.ff_pc_seq.savefig(pc_seq_fn)
+    
+    pc_seq_uvwxyz_fn = os.path.join(ff_products_folder,targname.replace(" ","") + "pc_seq_uvwxyz.png")
+    group.ff_uvwxyz.savefig(pc_seq_uvwxyz_fn)
+    
+    #save plotting results
+    plot_df_fn = os.path.join(ff_product_folder,targname.replace(" ","") + "_rots.csv")
+    group.save_plot_df(fn = plot_df_fn)
+    save_group_object(group,group_fn)
+    
+      
