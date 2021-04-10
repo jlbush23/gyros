@@ -653,7 +653,7 @@ def comove_ff_rotations(query_df,download_dir,vlim=5,srad=25,ff_lists_loc = None
 
     for i,row in query_df.iterrows():
         toi = str(row['TOI']).split(".")[0]
-        print("Working on TOI " + toi + ", object "  + str(i+1) + "/" + str(len(comove_df2)) + ".")
+        print("Working on TOI " + toi + ", object "  + str(i+1) + "/" + str(len(query_df)) + ".")
         tic = str(row['tic'])
         targname = "TOI " + toi
         
