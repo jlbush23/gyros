@@ -700,10 +700,9 @@ def comove_ff_rotations(query_df,download_dir,vlim=5,srad=25,ff_lists_loc = None
         ## run group rotations with 'ff' settings
         #create group toi dict
         group_toi_dict = {'tic':tic,'toi':toi}
-        lc_download_dir = os.path.join(toi_folder,'lc_pickles')
         
         # run the run function
-        ff_group_run(group_toi_dict = group_toi_dict, download_dir = lc_download_dir,
+        ff_group_run(group_toi_dict = group_toi_dict, download_dir = toi_folder,
                      friends_df = friends_df, ff_product_folder = ff_product_folder)
         
 def ff_group_run(group_toi_dict,download_dir,friends_df,ff_product_folder):
@@ -720,8 +719,9 @@ def ff_group_run(group_toi_dict,download_dir,friends_df,ff_product_folder):
     save_group_object(group,group_fn)
     
     #add lcs, save group with rotation_dict_collection
-    if os.path.exists(download_dir) == False: os.mkdir(download_dir)
-    group.add_tess_LCs(download_dir = download_dir, lc_types = ['cpm'])
+    lc_download_dir = os.path.join(download_dir,'lc_pickles')
+    if os.path.exists(download_dir) == False: os.mkdir(lc_download_dir)
+    group.add_tess_LCs(download_dir = lc_download_dir, lc_types = ['cpm'])
     save_group_object(group,group_fn)
     
     # add Gaia query    
