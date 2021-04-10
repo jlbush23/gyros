@@ -105,7 +105,7 @@ class Group:
         
     #def add_final_rots():
         #condition on rots_summary
-    def save_plot_df(self,fn = None,lc_type = ['cpm']):
+    def save_plot_df(self,fn = None,lc_type = 'cpm'):
         ## create plot df
         best_rots_df = self.best_rots_dict[lc_type]
         plot_df = self.group_df.merge(right = best_rots_df, on = 'tic', how = 'left').drop_duplicates(subset = ['tic'])
