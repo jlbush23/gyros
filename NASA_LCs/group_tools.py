@@ -746,7 +746,7 @@ def ff_group_run(group_toi_dict,download_dir,friends_df,ff_product_folder):
     pc_seq_fn = os.path.join(ff_product_folder,targname.replace(" ","") + "_pc_seq.png")
     group.ff_pc_seq.savefig(pc_seq_fn)
     
-    pc_seq_uvwxyz_fn = os.path.join(ff_products_folder,targname.replace(" ","") + "pc_seq_uvwxyz.png")
+    pc_seq_uvwxyz_fn = os.path.join(ff_product_folder,targname.replace(" ","") + "pc_seq_uvwxyz.png")
     group.ff_uvwxyz.savefig(pc_seq_uvwxyz_fn)
     
     #save plotting results
