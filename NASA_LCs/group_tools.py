@@ -157,36 +157,39 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm']):
         
         if ('cpm' in targ_rot_dict.keys()) & ('cpm' in lc_types):
             cpm_rot_dict = targ_rot_dict['cpm']
-            cpm_LS_res = cpm_rot_dict['LS_res']
-            cpm_AC_res = cpm_rot_dict['AC_res']
-            
-            temp_res = cpm_LS_res.merge(right = cpm_AC_res, on = 'sector', how = 'outer')
-            best_idx = np.where(np.max(temp_res['LS_Power1']) == temp_res['LS_Power1'])[0][0]
-            best_sector_res = temp_res.iloc[best_idx,:].to_frame().transpose()
-            best_sector_res.insert(loc = 0, column = 'tic', value = str(tic))
-            best_cpm_rots.append(best_sector_res)
+            if 'LS_res' in cpm_rot_dict.keys():
+                cpm_LS_res = cpm_rot_dict['LS_res']
+                cpm_AC_res = cpm_rot_dict['AC_res']
+                
+                temp_res = cpm_LS_res.merge(right = cpm_AC_res, on = 'sector', how = 'outer')
+                best_idx = np.where(np.max(temp_res['LS_Power1']) == temp_res['LS_Power1'])[0][0]
+                best_sector_res = temp_res.iloc[best_idx,:].to_frame().transpose()
+                best_sector_res.insert(loc = 0, column = 'tic', value = str(tic))
+                best_cpm_rots.append(best_sector_res)
 
         if ('sap' in targ_rot_dict.keys()) & ('spoc' in lc_types):
             sap_rot_dict = targ_rot_dict['sap']
-            sap_LS_res = sap_rot_dict['LS_res']
-            sap_AC_res = sap_rot_dict['AC_res']
-            
-            temp_res = sap_LS_res.merge(right = sap_AC_res, on = 'sector', how = 'outer')
-            best_idx = np.where(np.max(temp_res['LS_Power1']) == temp_res['LS_Power1'])[0][0]
-            best_sector_res = temp_res.iloc[best_idx,:].to_frame().transpose()
-            best_sector_res.insert(loc = 0, column = 'tic', value = str(tic))
-            best_sap_rots.append(best_sector_res)
+            if 'LS_res' in sap_rot_dict.keys():
+                sap_LS_res = sap_rot_dict['LS_res']
+                sap_AC_res = sap_rot_dict['AC_res']
+                
+                temp_res = sap_LS_res.merge(right = sap_AC_res, on = 'sector', how = 'outer')
+                best_idx = np.where(np.max(temp_res['LS_Power1']) == temp_res['LS_Power1'])[0][0]
+                best_sector_res = temp_res.iloc[best_idx,:].to_frame().transpose()
+                best_sector_res.insert(loc = 0, column = 'tic', value = str(tic))
+                best_sap_rots.append(best_sector_res)
             
         if ('pdc' in targ_rot_dict.keys()) & ('spoc' in lc_types):
-            pdc_rot_dict = targ_rot_dict['pdc']
-            pdc_LS_res = pdc_rot_dict['LS_res']
-            pdc_AC_res = pdc_rot_dict['AC_res']
-            
-            temp_res = pdc_LS_res.merge(right = pdc_AC_res, on = 'sector', how = 'outer')
-            best_idx = np.where(np.max(temp_res['LS_Power1']) == temp_res['LS_Power1'])[0][0]
-            best_sector_res = temp_res.iloc[best_idx,:].to_frame().transpose()
-            best_sector_res.insert(loc = 0, column = 'tic', value = str(tic))
-            best_pdc_rots.append(best_sector_res)            
+            if 'LS_res' in pdc_rot_dict.keys():
+                pdc_rot_dict = targ_rot_dict['pdc']
+                pdc_LS_res = pdc_rot_dict['LS_res']
+                pdc_AC_res = pdc_rot_dict['AC_res']
+                
+                temp_res = pdc_LS_res.merge(right = pdc_AC_res, on = 'sector', how = 'outer')
+                best_idx = np.where(np.max(temp_res['LS_Power1']) == temp_res['LS_Power1'])[0][0]
+                best_sector_res = temp_res.iloc[best_idx,:].to_frame().transpose()
+                best_sector_res.insert(loc = 0, column = 'tic', value = str(tic))
+                best_pdc_rots.append(best_sector_res)            
     
     #augment best rots df's with perc_err, matches, and aliases
     best_rots_dict = {}
