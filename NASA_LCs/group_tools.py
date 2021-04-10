@@ -22,6 +22,24 @@ from NASA_LCs.Group import Group
 
 from uvwxyz.xyzuvw import xyz,uvw
 
+def load_toi_catalog(augment=True):
+    lit_rot_folder = os.path.join(os.path.expanduser("~"),'NASA_LCs','literature_rotations')
+    toi_cat_fn = os.path.join(lit_rot_folder,'csv-file-toi-catalog.csv')
+    
+    toi_df = pd.read_csv(toi_cat_fn, skiprows = 4, dtype = {'TIC':np.str_,'Full TOI ID':np.str_})
+    
+    if augment == True:
+        toi_df = toi_df.rename(columns = {'TIC':'tic',
+                                          'TIC Right Ascension':'ra', 'TIC Declination':'dec',
+                                          'Tmag Value':'Tmag'})
+        def strip_TOI(data):
+            TOIs = data['Full TOI ID'].split(".")[0]
+            return(TOIs)
+        
+        toi_df.insert(loc = 0, column = 'TOI', value = toi_df.apply(func = strip_TOI, axis = 1))
+    
+    return(toi_df)
+
 def create_target_dict(pickle_folder):
     target_list = os.listdir(pickle_folder)
     target_dict = {}
