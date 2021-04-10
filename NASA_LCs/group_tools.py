@@ -120,17 +120,20 @@ def bulk_download(tic_list, download_dir, lc_types = ['spoc','cpm'],
         target_rots_dict = {}
         if 'spoc' in lc_types:
             sap_rot_dict = target_obj.sap_rot_dict
-            del sap_rot_dict['rot_fig']
+            if 'rot_fig' in sap_rot_dict.keys():
+                del sap_rot_dict['rot_fig']
             
             pdc_rot_dict = target_obj.pdc_rot_dict
-            del pdc_rot_dict['rot_fig']
+            if 'rot_fig' in pdc_rot_dict.keys():    
+                del pdc_rot_dict['rot_fig']
             
             target_rots_dict['sap'] = sap_rot_dict
             target_rots_dict['pdc'] = pdc_rot_dict
             
         if 'cpm' in lc_types:
             cpm_rot_dict = target_obj.cpm_rot_dict
-            del cpm_rot_dict['rot_fig']
+            if 'rot_fig' in cpm_rot_dict.keys():
+                del cpm_rot_dict['rot_fig']
             
             target_rots_dict['cpm'] = cpm_rot_dict
         
