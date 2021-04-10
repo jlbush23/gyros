@@ -720,7 +720,7 @@ def ff_group_run(group_toi_dict,download_dir,friends_df,ff_product_folder):
     
     #add lcs, save group with rotation_dict_collection
     lc_download_dir = os.path.join(download_dir,'lc_pickles')
-    if os.path.exists(download_dir) == False: os.mkdir(lc_download_dir)
+    if os.path.exists(lc_download_dir) == False: os.mkdir(lc_download_dir)
     group.add_tess_LCs(download_dir = lc_download_dir, lc_types = ['cpm'])
     save_group_object(group,group_fn)
     
