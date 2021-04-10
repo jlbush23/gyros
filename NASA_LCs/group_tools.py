@@ -688,6 +688,7 @@ def comove_ff_rotations(query_df,download_dir,vlim=5,srad=25,ff_lists_loc = None
             friends_df = pd.read_csv(friends_fn, delim_whitespace=True).rename(columns = {'RA':'ra','DEC':'dec'})
         else:
             #read ff_lists that match TOI name
+            if os.path.exists(ff_product_folder) == False: os.mkdir(ff_product_folder)
             if toi in TOIs_in_ff_lists:
                 friends_fn = os.path.join(ff_lists_loc,'toi' + toi + '.txt')
                 friends_df = pd.read_csv(friends_fn, delim_whitespace=True).rename(columns = {'RA':'ra','DEC':'dec'})
