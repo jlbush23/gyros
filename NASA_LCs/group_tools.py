@@ -649,7 +649,7 @@ def comove_ff_rotations(query_df,download_dir,vlim=5,srad=25,ff_lists_loc = None
         ff_lists_fns = os.listdir(ff_lists_loc)
         TOIs_in_ff_lists = []
         for fn in ff_lists_fns:
-            TOIS_in_ff_lists.append(fn.split(".")[0].split("toi")[1])
+            TOIs_in_ff_lists.append(fn.split(".")[0].split("toi")[1])
 
     for i,row in query_df.iterrows():
         toi = str(row['TOI']).split(".")[0]
