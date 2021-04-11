@@ -153,16 +153,28 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm']):
     if 'cpm' in lc_types: best_cpm_rots =[]
     
     for tic in rots_dict_collection.keys():
+        print(tic)
         targ_rot_dict = rots_dict_collection[tic]
         
         if ('cpm' in targ_rot_dict.keys()) & ('cpm' in lc_types):
             cpm_rot_dict = targ_rot_dict['cpm']
             if 'LS_res' in cpm_rot_dict.keys():
-                cpm_LS_res = cpm_rot_dict['LS_res']
+                try:
+                    cpm_LS_res = cpm_rot_dict['LS_res']
+                except KeyError:
+                    print("Key Error. LS_res is empty, moving to next target.")
+                    continue 
+                
                 cpm_AC_res = cpm_rot_dict['AC_res']
                 
                 temp_res = cpm_LS_res.merge(right = cpm_AC_res, on = 'sector', how = 'outer')
-                best_idx = np.where(np.max(temp_res['LS_Power1']) == temp_res['LS_Power1'])[0][0]
+                try:
+                    best_idx = np.where(np.max(temp_res['LS_Power1']) == temp_res['LS_Power1'])[0][0]
+                except IndexError:
+                    print("Can't index it because it has no length. No period returned.")
+                    print("Moving to next target.")
+                    continue 
+                
                 best_sector_res = temp_res.iloc[best_idx,:].to_frame().transpose()
                 best_sector_res.insert(loc = 0, column = 'tic', value = str(tic))
                 best_cpm_rots.append(best_sector_res)
