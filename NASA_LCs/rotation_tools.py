@@ -72,10 +72,12 @@ def my_LS_multi_sector(lc_df,flux_type,flux_err_avail = True, min_freq = 1/30):
 def my_LS(time,flux,flux_err = None, max_per = 30): 
     min_freq = 1/max_per          
     
-    if flux_err is None:                
-        freq,power = LombScargle(time,flux).autopower(minimum_frequency = min_freq, maximum_frequency = 10.0)
+    if flux_err is None:  
+        ls = LombScargle(time,flux)              
+        freq,power = ls.autopower(minimum_frequency = min_freq, maximum_frequency = 10.0)
     else:
-        freq,power = LombScargle(time,flux,flux_err).autopower(minimum_frequency = min_freq, maximum_frequency = 10.0)
+        ls = LombScargle(time,flux,flux_err)
+        freq,power = ls.autopower(minimum_frequency = min_freq, maximum_frequency = 10.0)
     
     threshhold = 0.005 
     peak_locs = []
@@ -99,58 +101,61 @@ def my_LS(time,flux,flux_err = None, max_per = 30):
     period = 1/freq
       
     if len(top3) == 0:
-        Per1 = np.nan
-        Power1 = np.nan
-        Per2 = np.nan
-        Power2 = np.nan
-        Per3 = np.nan
-        Power3 = np.nan
+        Per1 = Power1 = Per2 = Power2 = Per3 = Power3 =  np.nan
+        false_prob1 = false_prob2 = false_prob3 = np.nan
     
     if len(top3) == 1:
         Per1 = per_top3[0]
         Power1 = top3[0]
-        Per2 = np.nan
-        Power2 = np.nan
-        Per3 = np.nan
-        Power3 = np.nan
+        false_prob1 = ls.false_alarm_probability(Power1)
+        Per2 = Power2 = Per3 = Power3 =  np.nan
+        false_prob2 = false_prob3 = np.nan
+ 
     
     if len(top3) == 2:
         if per_top3[0] != max_per:
             Per1 = per_top3[0]
             Power1 = top3[0]
+            false_prob1 = ls.false_alarm_probability(Power1)
             Per2 = per_top3[1]
             Power2 = top3[1]
-            Per3 = np.nan
-            Power3 = np.nan
+            false_prob2 = ls.false_alarm_probability(Power2)
+            Per3 = Power3 = false_prob3 = np.nan
         else:
             Per1 = per_top3[1]
             Power1 = top3[1]
-            Per2 = np.nan
-            Power2 = np.nan
-            Per3 = np.nan
-            Power3 = np.nan
+            false_prob1 = ls.false_alarm_probability(Power1)
+            Per2 = Power2 = Per3 = Power3 =  np.nan
+            false_prob2 = false_prob3 = np.nan
                 
     if len(top3) == 3:
         if per_top3[0] != max_per:
             Per1 = per_top3[0]
             Power1 = top3[0]
+            false_prob1 = ls.false_alarm_probability(Power1)
             Per2 = per_top3[1]
             Power2 = top3[1]
+            false_prob2 = ls.false_alarm_probability(Power2)
             Per3 = per_top3[2]
             Power3 = top3[2]
+            false_prob3 = ls.false_alarm_probability(Power3)
         else:
             Per1 = per_top3[1]
             Power1 = top3[1]
+            false_prob1 = ls.false_alarm_probability(Power1)
             Per2 = per_top3[2]
             Power2 = top3[2]
-            Per3 = np.nan
-            Power3 = np.nan
+            false_prob2 = ls.false_alarm_probability(Power2)
+            Per3 = Power3 =  false_prob3 = np.nan
         
         
     temp_periodogram_df = (pd.DataFrame(data = np.transpose(np.array([period,power])), columns = ['period','power'], dtype = 'float')).sort_values(by = 'period', ascending = True)
     
-    temp_LS_results_tab = Table([[Per1],[Per2],[Per3],[Power1],[Power2],[Power3]], 
-                                names = ['LS_Per1','LS_Per2','LS_Per3','LS_Power1','LS_Power2','LS_Power3'])
+    temp_LS_results_tab = Table([[Per1],[Per2],[Per3],[false_prob1],[false_prob2],[false_prob3], 
+                                 [Power1],[Power2],[Power3]], 
+                                names = ['LS_Per1','LS_Per2','LS_Per3',
+                                         'False_Prob1','False_Prob2','False_Prob3',
+                                         'LS_Power1','LS_Power2','LS_Power3'])
     temp_LS_results_df = temp_LS_results_tab.to_pandas()
     return(temp_LS_results_df,temp_periodogram_df)
 
