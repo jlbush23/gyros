@@ -153,7 +153,7 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm']):
     if 'cpm' in lc_types: best_cpm_rots =[]
     
     for tic in rots_dict_collection.keys():
-        print(tic)
+        #print(tic)
         targ_rot_dict = rots_dict_collection[tic]
         
         if ('cpm' in targ_rot_dict.keys()) & ('cpm' in lc_types):
