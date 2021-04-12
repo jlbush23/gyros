@@ -9,11 +9,12 @@ import numpy as np
 
 import os
 
+import matplotlib.pyplot as plt
+
 import NASA_LCs.catalog_queries as catQ
-
 import NASA_LCs.lk_interface as lk_int
-
 import NASA_LCs.rotation_tools as rot_tools
+import NASA_LCs.target_tools as tt
 
 from tess_cpm.interface import cpm_interface as cpm_int
 
@@ -26,14 +27,23 @@ class Target:
         
         if self.tic is None:
             if (self.ra is not None) & (self.dec is not None):
-                tic = catQ.get_tic(ra = self.ra, dec = self.dec)
+                self.tic = str(catQ.get_tic(ra = self.ra, dec = self.dec))
             else:
                 print("Please re-initialize Target object with TIC or RA/Dec.")
         if self.ra is None:
             if self.tic is not None:
                 self.ra,self.dec = catQ.get_coord_from_ID(id_type = 'TIC',ID = self.tic)
+                self.tic = str(self.tic)
             else:
                 print("Please re-initialize Target object with TIC or RA/Dec.")
+                
+        ##add target TIC and Gaia info
+        self.TIC_query,_ = catQ.get_TIC_data(ra = self.ra, dec = self.dec)
+        self.TIC_query = self.TIC_query.rename(columns = {'ID':'tic','ra':'RA','dec':'DEC'})
+        self.gaia_query = catQ.get_gaia_data(ra = self.ra, dec = self.dec, gaia_kwrgs = 'all')
+        self.gaia_query['tic'] = self.tic
+        #create target df
+        self.target_df = self.TIC_query.merge(right = self.gaia_query, on = 'tic', how = 'left').drop_duplicates(subset = ['tic']).reset_index(drop=True)
                 
     def add_lk_LCs(self):
         self.all_LCs, self.spoc120_lc, self.lk_search_table = lk_int.get_lk_LCs(tic = self.tic)
@@ -45,8 +55,22 @@ class Target:
         cpm_obj = cpm_int(tic = self.tic)
         cpm_obj.download_extract()
         self.cpm_lc = cpm_obj.lc_df
+        self.median_cpm_im = cpm_obj.median_im
+        self.cpm_im_header = cpm_obj.im_header
         if len(self.cpm_lc) > 0: self.available_attributes.append('cpm_lc')
-            
+        
+    def check_ffi_contamination(self,srad = 15.5*20):
+        self.gaia_contam = tt.target_contam_gaia(ra = self.ra,dec = self.dec, srad = srad)
+         
+    
+    def contamination_plot(self):
+        fig = plt.figure(figsize = (8, 8))
+        self.contam_fig = tt.contamination_plot(fig = fig,
+                                                gaia_contam = self.gaia_contam,
+                                                median_im = self.median_cpm_im,
+                                                im_header = self.cpm_im_header,
+                                                target_df = self.target_df)
+    
     def run_spoc_rots(self,min_freq = 1/30):
         flux_type = ['sap_flux','pdcsap_flux']
         flux_err_avail = True
