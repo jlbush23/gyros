@@ -22,6 +22,36 @@ from NASA_LCs.Group import Group
 
 from uvwxyz.xyzuvw import xyz,uvw
 
+def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm']):
+    ## run a general group given a group df with ra,dec columns    
+    #create group
+    group = Group(name = group_name, group_df = group_df)
+    
+    # add TIC catalog info
+    group.add_TIC_info()
+    save_group_object(group,group_fn)
+    
+    #add lcs, save group with rotation_dict_collection
+    lc_download_dir = os.path.join(download_dir,'lc_pickles')
+    if os.path.exists(lc_download_dir) == False: os.mkdir(lc_download_dir)
+    group.add_tess_LCs(download_dir = lc_download_dir, lc_types = lc_types)
+    save_group_object(group,group_fn)
+    
+    # add Gaia query    
+    group.add_gaia_info(id_col_name = 'tic',galactic_coords = False)
+    save_group_object(group,group_fn)
+    
+    #organize best_rots, Tmag summary
+    group.rot_summary(lc_types = lc_types, tmag_list = [14,15,16,99])
+    save_group_object(group,group_fn)
+    
+    # #save plotting results
+    # plot_df_fn = os.path.join(ff_product_folder,targname.replace(" ","") + "_rots.csv")
+    # group.save_plot_df(fn = plot_df_fn)
+    # save_group_object(group,group_fn)
+    
+      
+
 def load_toi_catalog(augment=True):
     lit_rot_folder = os.path.join(os.path.expanduser("~"),'NASA_LCs','literature_rotations')
     toi_cat_fn = os.path.join(lit_rot_folder,'csv-file-toi-catalog.csv')
@@ -111,6 +141,7 @@ def bulk_download(tic_list, download_dir, lc_types = ['spoc','cpm'],
         if 'cpm' in lc_types: 
             try: 
                 target_obj.add_cpm_LC()
+                target_obj.check_ffi_contamination()
                 if (run_rotations == True) & ('cpm_lc' in target_obj.available_attributes): target_obj.run_cpm_rots(min_freq = min_freq)
             except:
                 print("Data download error or error with running CPM rotations.")
@@ -261,6 +292,7 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm']):
     return(best_rots_dict)
 
 def add_gaia_galactic_coords(tic, gaia_query_df):
+    ### UPDATE: this function to take optional reference target
     gaia_query = gaia_query_df
     
     ref_pmra = gaia_query[gaia_query['tic'] == tic]['pmra'][0]
