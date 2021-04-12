@@ -199,7 +199,7 @@ def get_TIC_data(ra,dec):
         tic = np.nan
         print("Didn't find TIC for this object.")
     else:
-        print("Found TIC Data for TIC" + str(tic) + "!")
+        print("Found TIC Data for TIC " + str(tic) + "!")
         #self.tic = tic
     return(obs_df,tic)
 
@@ -360,8 +360,14 @@ def get_gaia_id(ra,dec):
 def get_gaia_data(ra,dec,gaia_kwrgs):
     
     #print("Working on GAIA data.")
-    coord = SkyCoord(ra=ra*u.degree,dec=dec*u.degree)
-    obs_table_gaia = Gaia.query_object(coord,radius = 0.002*u.degree)
+    c = SkyCoord(ra=ra*u.degree,dec=dec*u.degree)
+    # Pgaia = Gaia.query_object_async(coordinate=c, radius=(5.0*u.arcsec))
+    sqltext = "SELECT * FROM gaiaedr3.gaia_source WHERE CONTAINS( \
+               POINT('ICRS',gaiaedr3.gaia_source.ra,gaiaedr3.gaia_source.dec), \
+               CIRCLE('ICRS'," + str(c.ra.value) +","+ str(c.dec.value) +","+ str(6.0/3600.0) +"))=1;"
+    job = Gaia.launch_job_async(sqltext , dump_to_file=False)
+    obs_table_gaia = job.get_results()
+    #obs_table_gaia = Gaia.query_object(c,radius = 0.002*u.degree)
     
     gaia_id = get_gaia_id(ra=ra,dec=dec) #gets gaia id from TIC catalog on MAST to confirm correct gaia query
     if str(gaia_id) != 'nan':
