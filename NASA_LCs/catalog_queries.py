@@ -155,7 +155,7 @@ def get_tic(ra,dec):
         #self.tic = tic
     return(tic)
 
-def get_TIC_data_bulk(query_df,ra_col_name = 'ra', dec_col_name = 'dec'):
+def get_TIC_data_bulk(query_df,ra_col_name = 'ra', dec_col_name = 'dec',append_tics = True):
     tics = []
     TIC_dfs = []
     for i,row in query_df.iterrows():
@@ -169,7 +169,7 @@ def get_TIC_data_bulk(query_df,ra_col_name = 'ra', dec_col_name = 'dec'):
             tics.append(temp_tic)
             TIC_dfs.append(temp_TIC_df)
     
-    query_df.insert(loc = 0, column = 'tic', value = tics)
+    if append_tics == True: query_df.insert(loc = 0, column = 'tic', value = tics)
     TIC_query = pd.concat(TIC_dfs)
     return(tics, TIC_query)#,query_df)
 

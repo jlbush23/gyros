@@ -28,7 +28,11 @@ def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm']):
     group = Group(name = group_name, group_df = group_df)
     
     # add TIC catalog info
-    group.add_TIC_info()
+    if 'tic' in group_df.columns.to_numpy(dtype = 'str'):
+        append_tics = False
+    else:
+        append_tics = True
+    group.add_TIC_info(append_tics = append_tics)
     save_group_object(group,group_fn)
     
     #add lcs, save group with rotation_dict_collection

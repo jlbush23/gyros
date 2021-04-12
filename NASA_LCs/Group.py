@@ -28,10 +28,11 @@ class Group:
             self.tics = catQ.get_tic_bulk(query_df = self.group_df,
                                           ra_col_name = ra_col_name, dec_col_name = dec_col_name)
         self.attributes_list.append('tics')
-    def add_TIC_info(self, ra_col_name = 'ra', dec_col_name = 'dec'):
+    def add_TIC_info(self, ra_col_name = 'ra', dec_col_name = 'dec',append_tics = True):
         self.tics,self.TIC_query = catQ.get_TIC_data_bulk(query_df = self.group_df,
                                                           ra_col_name = ra_col_name, 
-                                                          dec_col_name = dec_col_name)
+                                                          dec_col_name = dec_col_name,
+                                                          append_tics = append_tics)
         self.TIC_query = self.TIC_query.rename(columns = {'ID':'tic'})
         self.attributes_list.append('tics')
         self.attributes_list.append('TIC_query')
