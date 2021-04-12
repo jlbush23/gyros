@@ -15,7 +15,7 @@ import NASA_LCs.group_tools as gt
 import NASA_LCs.catalog_queries as catQ
 
 class Group:
-    def __init__(self,name,group_df,group_toi_dict):
+    def __init__(self,name,group_df,group_toi_dict=None):
         self.name = str(name)
         self.group_df = group_df
         self.group_toi_dict = group_toi_dict
@@ -41,6 +41,7 @@ class Group:
                                                  gaia_kwrgs = gaia_kwrgs, id_col_name = id_col_name)        
         
         if galactic_coords == True:
+            ##update this function to take option reference tic
             self.gaia_query = gt.add_gaia_galactic_coords(tic = self.group_toi_dict['tic'], gaia_query_df = self.gaia_query)
             
         self.attributes_list.append('gaia_query')    
