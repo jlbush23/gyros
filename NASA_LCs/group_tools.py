@@ -436,6 +436,11 @@ def tmag_plot(ax,tmag_df, tmag_summary, width = 0.35):
 
 def ff_pc_seq(ax,plot_df,group_toi_dict,cont_thresh = 0.7, color_type = 'bp_rp', xlim = (0.05,4), title = None):
     tic = group_toi_dict['tic']
+    if 'toi' in group_toi_dict.keys():
+        toi = group_toi_dict['toi']
+        toi_label = 'TOI ' + str(toi)
+    else:
+        toi_label = 'TIC ' + str(tic)
     
     #create plot_df sub data frames for plotting different labeled data sets 
     plot_toi = plot_df[plot_df['tic'] == tic]
@@ -468,7 +473,7 @@ def ff_pc_seq(ax,plot_df,group_toi_dict,cont_thresh = 0.7, color_type = 'bp_rp',
     ax.scatter(plot_toi[color_type],plot_toi['LS_Per1'],
                 c = 'springgreen', s = 150,
                 alpha = 1, edgecolors = 'black',
-                label = 'TOI 1097', marker = 'x')
+                label = toi_label, marker = 'x')
     ax.legend(loc = 'lower left', fontsize = 'large', framealpha = 0.4)
     
     if title is None:
