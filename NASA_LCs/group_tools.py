@@ -725,7 +725,7 @@ def comove_ff_rotations(query_df,download_dir,vlim=5,srad=25,ff_lists_loc = None
         if ff_lists_loc is None:
             
             rd = [row['ra']*(24/360),row['dec']]
-            radvel = row['radial_velocity']
+            radvel = row['dr2_radial_velocity']
             if str(radvel) == 'nan': 
                 print("No radial velocity for this object in Gaia. Trying next TOI.")
                 continue
