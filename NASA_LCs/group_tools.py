@@ -315,7 +315,7 @@ def add_gaia_galactic_coords(tic, gaia_query_df):
         
     def uvw_cols(data,col):
         u,v,w = uvw(ra = data['ra'], dec = data['dec'], d = 1000/data['parallax'],
-                    pmra = data['pmra'], pmde = data['pmdec'], rv = data['radial_velocity'])
+                    pmra = data['pmra'], pmde = data['pmdec'], rv = data['dr2_radial_velocity'])
         if col == 'u': return(u)
         if col == 'v': return(v)
         if col == 'w': return(w)
