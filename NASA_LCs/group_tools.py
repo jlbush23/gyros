@@ -457,21 +457,21 @@ def ff_pc_seq(ax,plot_df,group_toi_dict,cont_thresh = 0.7, color_type = 'bp_rp',
     pc_seq_fig(ax = ax, xlim = xlim)
     mapable = ax.scatter(match[color_type],match['LS_Per1'], #c='red',
                 c = match['Voff(km/s)'], cmap = "autumn", vmin = vmin, vmax = vmax, 
-                s = match['LS_Power1'].to_numpy(dtype = 'float')*150, 
+                s = match['LS_Power1'].to_numpy(dtype = 'float')*200, 
                 alpha = 0.7, edgecolors = 'black', 
                 label = 'Match', marker = 'o')
     ax.scatter(alias2[color_type],alias2['LS_Per1'], #c='red',
                 c = alias2['Voff(km/s)'], cmap = "autumn", vmin = vmin, vmax = vmax, 
-                s = alias2['LS_Power1'].to_numpy(dtype = 'float')*150, 
+                s = alias2['LS_Power1'].to_numpy(dtype = 'float')*200, 
                 alpha = 0.7, edgecolors = 'black',
                 label = 'Alias 2x', marker = 's')
     ax.scatter(alias_half[color_type],alias_half['LS_Per1'], #c='red',
                 c = alias_half['Voff(km/s)'], cmap = "autumn", vmin = vmin, vmax = vmax, 
-                s = alias_half['LS_Power1'].to_numpy(dtype = 'float')*150, 
+                s = alias_half['LS_Power1'].to_numpy(dtype = 'float')*200, 
                 alpha = 0.7, edgecolors = 'black',
                 label = 'Alias 0.5x', marker = '^')
     ax.scatter(plot_toi[color_type],plot_toi['LS_Per1'],
-                c = 'springgreen', s = 150,
+                c = 'springgreen', s = 200,
                 alpha = 1, edgecolors = 'black',
                 label = toi_label, marker = 'x')
     ax.legend(loc = 'lower left', fontsize = 'large', framealpha = 0.4)
