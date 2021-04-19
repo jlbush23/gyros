@@ -343,6 +343,7 @@ def add_gaia_galactic_coords(tic, gaia_query_df):
     return(gaia_query)
 
 def add_Tmag_rot_summary(best_rots, cont_thresh = 0.7, tmag_list = [14,15,16,99]):
+    best_rots = best_rots.drop_duplicates(subset = ['tic'])
     match_col_name = 'Match' #+ '(' + str(sum(best_rots['perc_err_match'] == True)) + ')'
     alias_col_name = 'Alias' #+ '(' + str(sum(best_rots['alias'] == True)) + ')'
     cont_col_name = 'ContRatio > ' + str(cont_thresh) #+ ' (' + str(sum(best_rots['contratio'] > 0.5)) + ')'
