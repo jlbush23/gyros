@@ -434,7 +434,7 @@ def tmag_plot(ax,tmag_df, tmag_summary, width = 0.35):
     
     ax.set_title("Hit Rate: " + str(tot_return) + " Ret / " + str(tot_avail) + " Uncontam = " + str(return_perc) + "%")# + " (Rots " + str(len(best_rots)) + " / " + str(len(group.group_df.drop_duplicates(subset = ['tic']))) + " Mems)")
 
-def ff_pc_seq(ax,plot_df,group_toi_dict,cont_thresh = 0.7, color_type = 'bp_rp', xlim = (0.05,4), title = None):
+def ff_pc_seq(ax,plot_df,group_toi_dict,cont_thresh = 0.7, color_type = 'bp_rp', xlim = (0.05,4), title = None, lit_seq = ['Pleiades','Praesepe','Hyades']):
     tic = group_toi_dict['tic']
     if 'toi' in group_toi_dict.keys():
         toi = group_toi_dict['toi']
@@ -454,7 +454,24 @@ def ff_pc_seq(ax,plot_df,group_toi_dict,cont_thresh = 0.7, color_type = 'bp_rp',
     
     #add literature sequences
     ## NEEDS UPDATE: to handle different literature pc_seq function parameters
-    pc_seq_fig(ax = ax, xlim = xlim)
+    if 'Pleiades' in lit_seq: 
+        pleiades_on = True
+    else: 
+        pleiades_on = False
+    if 'Praesepe' in lit_seq: 
+        praesepe_on = True
+    else: 
+        praesepe_on = False        
+    if 'Hyades' in lit_seq: 
+        hyades_on = True
+    else: 
+        hyades_on = False
+    if 'Upper Sco' in lit_seq: 
+        upper_sco_on = True
+    else: 
+        upper_sco_on = False        
+    pc_seq_fig(ax = ax, xlim = xlim, 
+               pleiades_on = pleiades_on, praesepe_on = praesepe_on, hyades_on = hyades_on, upper_sco_on = upper_sco_on)
     mapable = ax.scatter(match[color_type],match['LS_Per1'], #c='red',
                 c = match['Voff(km/s)'], cmap = "autumn", vmin = vmin, vmax = vmax, 
                 s = match['LS_Power1'].to_numpy(dtype = 'float')*200, 
@@ -603,7 +620,7 @@ def pc_seq_fig(ax, color_type = 'bp_rp', pleiades_on = True, praesepe_on = True,
     
     return(ax)
             
-def pc_seq_uvwxyz(plot_df, tmag_summary_dict, group_toi_dict, cont_thresh = 0.7, toi_label = None, legend_locs_dict = None):
+def pc_seq_uvwxyz(plot_df, tmag_summary_dict, group_toi_dict, cont_thresh = 0.7, toi_label = None, legend_locs_dict = None, lit_seq = ['Pleiades','Praesepe','Hyades']):
     ### NEEDS UPDATE: variable legend locs labeled by subplot indices
     
     ## create rot avail/not avail subset dataframes for labeled plotting
@@ -619,7 +636,7 @@ def pc_seq_uvwxyz(plot_df, tmag_summary_dict, group_toi_dict, cont_thresh = 0.7,
     
     ax1 = axs[0,0]
     ff_pc_seq(ax = ax1, plot_df = plot_df, group_toi_dict = group_toi_dict,
-                 cont_thresh = cont_thresh)
+                 cont_thresh = cont_thresh, lit_seq = lit_seq)
     
     ax2 = axs[0,1]
     ax2.scatter(rot_not_avail['x'],rot_not_avail['z'], c = 'darkgrey', label = 'No Rot', alpha = 0.8, edgecolors = 'k')
@@ -803,7 +820,7 @@ def ff_group_run(group_toi_dict,download_dir,friends_df,ff_product_folder):
     pc_seq_fn = os.path.join(ff_product_folder,targname.replace(" ","") + "_pc_seq.png")
     group.ff_pc_seq.savefig(pc_seq_fn)
     
-    pc_seq_uvwxyz_fn = os.path.join(ff_product_folder,targname.replace(" ","") + "pc_seq_uvwxyz.png")
+    pc_seq_uvwxyz_fn = os.path.join(ff_product_folder,targname.replace(" ","") + "_pc_seq_uvwxyz.png")
     group.ff_uvwxyz.savefig(pc_seq_uvwxyz_fn)
     
     #save plotting results
