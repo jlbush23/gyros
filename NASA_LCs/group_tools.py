@@ -138,8 +138,8 @@ def bulk_download(tic_list, download_dir, lc_types = ['spoc','cpm'],
         # try spoc
         if 'spoc' in lc_types:
             try: 
-                target_obj.add_lk_LCs()
-                if (run_rotations == True) & ('spoc120_lc' in target_obj.available_attributes): target_obj.run_spoc_rots(min_freq = min_freq)
+                target_obj.add_spoc_LCs()
+                if (run_rotations == True) & ('spoc_lc' in target_obj.available_attributes): target_obj.run_spoc_rots(min_freq = min_freq)
             except:
                 print("Data download error. Check if SPOC available on MAST.")
             
@@ -155,16 +155,25 @@ def bulk_download(tic_list, download_dir, lc_types = ['spoc','cpm'],
         ## store rotation dicts of each object, but remove 
         target_rots_dict = {}
         if 'spoc' in lc_types:
-            sap_rot_dict = target_obj.sap_rot_dict
-            if 'rot_fig' in sap_rot_dict.keys():
-                del sap_rot_dict['rot_fig']
+            # sap_rot_dict = target_obj.sap_rot_dict
+            # if 'rot_fig' in sap_rot_dict.keys():
+            #     del sap_rot_dict['rot_fig']
             
-            pdc_rot_dict = target_obj.pdc_rot_dict
-            if 'rot_fig' in pdc_rot_dict.keys():    
-                del pdc_rot_dict['rot_fig']
+            # pdc_rot_dict = target_obj.pdc_rot_dict
+            # if 'rot_fig' in pdc_rot_dict.keys():    
+            #     del pdc_rot_dict['rot_fig']
             
-            target_rots_dict['sap'] = sap_rot_dict
-            target_rots_dict['pdc'] = pdc_rot_dict
+            # target_rots_dict['sap'] = sap_rot_dict
+            # target_rots_dict['pdc'] = pdc_rot_dict
+
+            if 'spoc_rot_dict' in target_obj.available_attributes:
+                spoc_rot_dict = target_obj.spoc_rot_dict
+                if 'rot_fig' in spoc_rot_dict.keys():
+                    del spoc_rot_dict['rot_fig']
+                
+                target_rots_dict['spoc'] = spoc_rot_dict
+            else:
+                target_rots_dict['spoc'] = {}
             
         if 'cpm' in lc_types:
             if 'cpm_rot_dict' in target_obj.available_attributes:
@@ -187,8 +196,9 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm']):
     ## somehow feed a dict of rot dicts instead?
     
     if 'spoc' in lc_types: 
-        best_sap_rots = []
-        best_pdc_rots = []
+        # best_sap_rots = []
+        # best_pdc_rots = []
+        best_spoc_rots = []
     if 'cpm' in lc_types: best_cpm_rots =[]
     
     for tic in rots_dict_collection.keys():
@@ -217,30 +227,53 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm']):
                 best_sector_res = temp_res.iloc[best_idx,:].to_frame().transpose()
                 best_sector_res.insert(loc = 0, column = 'tic', value = str(tic))
                 best_cpm_rots.append(best_sector_res)
+                
+        if ('spoc' in targ_rot_dict.keys()) & ('spoc' in lc_types):
+            spoc_rot_dict = targ_rot_dict['spoc']
+            if 'LS_res' in spoc_rot_dict.keys():
+                try:
+                    spoc_LS_res = spoc_rot_dict['LS_res']
+                except KeyError:
+                    print("Key Error. LS_res is empty, moving to next target.")
+                    continue 
+                
+                spoc_AC_res = spoc_rot_dict['AC_res']
+                
+                temp_res = spoc_LS_res.merge(right = spoc_AC_res, on = 'sector', how = 'outer')
+                try:
+                    best_idx = np.where(np.max(temp_res['LS_Power1']) == temp_res['LS_Power1'])[0][0]
+                except IndexError:
+                    print("Can't index it because it has no length. No period returned.")
+                    print("Moving to next target.")
+                    continue 
+                
+                best_sector_res = temp_res.iloc[best_idx,:].to_frame().transpose()
+                best_sector_res.insert(loc = 0, column = 'tic', value = str(tic))
+                best_spoc_rots.append(best_sector_res)
 
-        if ('sap' in targ_rot_dict.keys()) & ('spoc' in lc_types):
-            sap_rot_dict = targ_rot_dict['sap']
-            if 'LS_res' in sap_rot_dict.keys():
-                sap_LS_res = sap_rot_dict['LS_res']
-                sap_AC_res = sap_rot_dict['AC_res']
+        # if ('sap' in targ_rot_dict.keys()) & ('spoc' in lc_types):
+        #     sap_rot_dict = targ_rot_dict['sap']
+        #     if 'LS_res' in sap_rot_dict.keys():
+        #         sap_LS_res = sap_rot_dict['LS_res']
+        #         sap_AC_res = sap_rot_dict['AC_res']
                 
-                temp_res = sap_LS_res.merge(right = sap_AC_res, on = 'sector', how = 'outer')
-                best_idx = np.where(np.max(temp_res['LS_Power1']) == temp_res['LS_Power1'])[0][0]
-                best_sector_res = temp_res.iloc[best_idx,:].to_frame().transpose()
-                best_sector_res.insert(loc = 0, column = 'tic', value = str(tic))
-                best_sap_rots.append(best_sector_res)
+        #         temp_res = sap_LS_res.merge(right = sap_AC_res, on = 'sector', how = 'outer')
+        #         best_idx = np.where(np.max(temp_res['LS_Power1']) == temp_res['LS_Power1'])[0][0]
+        #         best_sector_res = temp_res.iloc[best_idx,:].to_frame().transpose()
+        #         best_sector_res.insert(loc = 0, column = 'tic', value = str(tic))
+        #         best_sap_rots.append(best_sector_res)
             
-        if ('pdc' in targ_rot_dict.keys()) & ('spoc' in lc_types):
-            if 'LS_res' in pdc_rot_dict.keys():
-                pdc_rot_dict = targ_rot_dict['pdc']
-                pdc_LS_res = pdc_rot_dict['LS_res']
-                pdc_AC_res = pdc_rot_dict['AC_res']
+        # if ('pdc' in targ_rot_dict.keys()) & ('spoc' in lc_types):
+        #     if 'LS_res' in pdc_rot_dict.keys():
+        #         pdc_rot_dict = targ_rot_dict['pdc']
+        #         pdc_LS_res = pdc_rot_dict['LS_res']
+        #         pdc_AC_res = pdc_rot_dict['AC_res']
                 
-                temp_res = pdc_LS_res.merge(right = pdc_AC_res, on = 'sector', how = 'outer')
-                best_idx = np.where(np.max(temp_res['LS_Power1']) == temp_res['LS_Power1'])[0][0]
-                best_sector_res = temp_res.iloc[best_idx,:].to_frame().transpose()
-                best_sector_res.insert(loc = 0, column = 'tic', value = str(tic))
-                best_pdc_rots.append(best_sector_res)            
+        #         temp_res = pdc_LS_res.merge(right = pdc_AC_res, on = 'sector', how = 'outer')
+        #         best_idx = np.where(np.max(temp_res['LS_Power1']) == temp_res['LS_Power1'])[0][0]
+        #         best_sector_res = temp_res.iloc[best_idx,:].to_frame().transpose()
+        #         best_sector_res.insert(loc = 0, column = 'tic', value = str(tic))
+        #         best_pdc_rots.append(best_sector_res)            
     
     #augment best rots df's with perc_err, matches, and aliases
     best_rots_dict = {}
@@ -263,38 +296,54 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm']):
         best_rots_dict['cpm'] = best_cpm_rots_df
         
     if 'spoc' in lc_types: 
-        best_sap_rots_df = pd.concat(best_sap_rots)
-        best_sap_rots_df['perc_err'] = np.divide(best_sap_rots_df['LS_Per1'],best_sap_rots_df['ac_period'])
-        best_sap_rots_df['perc_err_match'] = (best_sap_rots_df['perc_err'] < 1.1) & (best_sap_rots_df['perc_err'] > 0.9)
-        best_sap_rots_df['alias'] = ((best_sap_rots_df['perc_err'] < 0.55) & (best_sap_rots_df['perc_err'] > 0.45)) | ((best_sap_rots_df['perc_err'] < 2.05) & (best_sap_rots_df['perc_err'] > 1.95))
+        best_spoc_rots_df = pd.concat(best_spoc_rots)
+        best_spoc_rots_df['perc_err'] = np.divide(best_spoc_rots_df['LS_Per1'],best_spoc_rots_df['ac_period'])
+        best_spoc_rots_df['perc_err_match'] = (best_spoc_rots_df['perc_err'] < 1.1) & (best_spoc_rots_df['perc_err'] > 0.9)
+        best_spoc_rots_df['alias'] = ((best_spoc_rots_df['perc_err'] < 0.55) & (best_spoc_rots_df['perc_err'] > 0.45)) | ((best_spoc_rots_df['perc_err'] < 2.05) & (best_spoc_rots_df['perc_err'] > 1.95))
         alias_type = []
-        for i,row in best_sap_rots_df.iterrows():
+        for i,row in best_spoc_rots_df.iterrows():
             if ((row['perc_err'] < 0.56) & (row['perc_err'] > 0.44)): 
                 alias_type.append("0.5x")
             elif ((row['perc_err'] < 2.06) & (row['perc_err'] > 1.94)): 
                 alias_type.append("2x")
             else:
                 alias_type.append(np.nan)
-        best_sap_rots_df['alias_type'] = alias_type
-        best_sap_rots_df['rot_avail'] = best_sap_rots_df['perc_err_match'] | best_sap_rots_df['alias']
-
-        best_pdc_rots_df = pd.concat(best_pdc_rots)
-        best_pdc_rots_df['perc_err'] = np.divide(best_pdc_rots_df['LS_Per1'],best_pdc_rots_df['ac_period'])
-        best_pdc_rots_df['perc_err_match'] = (best_pdc_rots_df['perc_err'] < 1.1) & (best_pdc_rots_df['perc_err'] > 0.9)
-        best_pdc_rots_df['alias'] = ((best_pdc_rots_df['perc_err'] < 0.55) & (best_pdc_rots_df['perc_err'] > 0.45)) | ((best_pdc_rots_df['perc_err'] < 2.05) & (best_pdc_rots_df['perc_err'] > 1.95))
-        alias_type = []
-        for i,row in best_pdc_rots_df.iterrows():
-            if ((row['perc_err'] < 0.56) & (row['perc_err'] > 0.44)): 
-                alias_type.append("0.5x")
-            elif ((row['perc_err'] < 2.06) & (row['perc_err'] > 1.94)): 
-                alias_type.append("2x")
-            else:
-                alias_type.append(np.nan)
-        best_pdc_rots_df['alias_type'] = alias_type
-        best_pdc_rots_df['rot_avail'] = best_pdc_rots_df['perc_err_match'] | best_pdc_rots_df['alias']
+        best_spoc_rots_df['alias_type'] = alias_type
+        best_spoc_rots_df['rot_avail'] = best_spoc_rots_df['perc_err_match'] | best_spoc_rots_df['alias']
         
-        best_rots_dict['sap'] = best_sap_rots_df
-        best_rots_dict['pdc'] = best_pdc_rots_df
+        best_rots_dict['spoc'] = best_spoc_rots_df
+        # best_sap_rots_df = pd.concat(best_sap_rots)
+        # best_sap_rots_df['perc_err'] = np.divide(best_sap_rots_df['LS_Per1'],best_sap_rots_df['ac_period'])
+        # best_sap_rots_df['perc_err_match'] = (best_sap_rots_df['perc_err'] < 1.1) & (best_sap_rots_df['perc_err'] > 0.9)
+        # best_sap_rots_df['alias'] = ((best_sap_rots_df['perc_err'] < 0.55) & (best_sap_rots_df['perc_err'] > 0.45)) | ((best_sap_rots_df['perc_err'] < 2.05) & (best_sap_rots_df['perc_err'] > 1.95))
+        # alias_type = []
+        # for i,row in best_sap_rots_df.iterrows():
+        #     if ((row['perc_err'] < 0.56) & (row['perc_err'] > 0.44)): 
+        #         alias_type.append("0.5x")
+        #     elif ((row['perc_err'] < 2.06) & (row['perc_err'] > 1.94)): 
+        #         alias_type.append("2x")
+        #     else:
+        #         alias_type.append(np.nan)
+        # best_sap_rots_df['alias_type'] = alias_type
+        # best_sap_rots_df['rot_avail'] = best_sap_rots_df['perc_err_match'] | best_sap_rots_df['alias']
+
+        # best_pdc_rots_df = pd.concat(best_pdc_rots)
+        # best_pdc_rots_df['perc_err'] = np.divide(best_pdc_rots_df['LS_Per1'],best_pdc_rots_df['ac_period'])
+        # best_pdc_rots_df['perc_err_match'] = (best_pdc_rots_df['perc_err'] < 1.1) & (best_pdc_rots_df['perc_err'] > 0.9)
+        # best_pdc_rots_df['alias'] = ((best_pdc_rots_df['perc_err'] < 0.55) & (best_pdc_rots_df['perc_err'] > 0.45)) | ((best_pdc_rots_df['perc_err'] < 2.05) & (best_pdc_rots_df['perc_err'] > 1.95))
+        # alias_type = []
+        # for i,row in best_pdc_rots_df.iterrows():
+        #     if ((row['perc_err'] < 0.56) & (row['perc_err'] > 0.44)): 
+        #         alias_type.append("0.5x")
+        #     elif ((row['perc_err'] < 2.06) & (row['perc_err'] > 1.94)): 
+        #         alias_type.append("2x")
+        #     else:
+        #         alias_type.append(np.nan)
+        # best_pdc_rots_df['alias_type'] = alias_type
+        # best_pdc_rots_df['rot_avail'] = best_pdc_rots_df['perc_err_match'] | best_pdc_rots_df['alias']
+        
+        # best_rots_dict['sap'] = best_sap_rots_df
+        # best_rots_dict['pdc'] = best_pdc_rots_df
         
         
     return(best_rots_dict)
