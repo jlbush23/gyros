@@ -43,7 +43,7 @@ def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm']):
     save_group_object(group,group_fn)
     
     # add Gaia query    
-    group.add_gaia_info(id_col_name = 'tic',galactic_coords = False)
+    group.add_gaia_info(id_col_name = 'tic',galactic_coords = True,delta_pm = False)
     save_group_object(group,group_fn)
     
     #organize best_rots, Tmag summary
@@ -348,48 +348,7 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm']):
         
     return(best_rots_dict)
 
-def add_gaia_galactic_coords(tic, gaia_query_df):
-    ### UPDATE: this function to take optional reference target
-    gaia_query = gaia_query_df
-    
-    ref_pmra = gaia_query[gaia_query['tic'] == tic]['pmra'][0]
-    ref_pmdec = gaia_query[gaia_query['tic'] == tic]['pmdec'][0]
-    
-    #parallax is in mas, d = 1000/parallax
-    def xyz_cols(data,col):
-        x,y,z=  xyz(ra = data['ra'], dec = data['dec'], d = 1000/data['parallax'])
-        if col == 'x': return(x)
-        if col == 'y': return(y)
-        if col == 'z': return(z)
-        
-    def uvw_cols(data,col):
-        u,v,w = uvw(ra = data['ra'], dec = data['dec'], d = 1000/data['parallax'],
-                    pmra = data['pmra'], pmde = data['pmdec'], rv = data['dr2_radial_velocity'])
-        if col == 'u': return(u)
-        if col == 'v': return(v)
-        if col == 'w': return(w)
-        
-    def delta_pm(data,col,ref = (np.nan,np.nan)):
-        delta_pmra = ref[0] - data['pmra']
-        delta_pmdec = ref[1] - data['pmdec']
-        
-        if col == 'delta_pmra': return(delta_pmra)
-        if col == 'delta_pmdec': return(delta_pmdec)
-        
-        
-    cols = ['x','y','z']
-    for col in cols:
-        gaia_query[col] = gaia_query.apply(func = xyz_cols, axis = 1, args = (col))
-        
-    cols = ['u','v','w']
-    for col in cols:
-        gaia_query[col] = gaia_query.apply(func = uvw_cols, axis = 1, args = (col))
-        
-    cols = ['delta_pmra','delta_pmdec']
-    for col in cols:
-        gaia_query[col] = gaia_query.apply(func = delta_pm, axis = 1, args = (col,(ref_pmra,ref_pmdec)))
-    
-    return(gaia_query)
+
 
 def add_Tmag_rot_summary(best_rots, cont_thresh = 0.7, tmag_list = [14,15,16,99]):
     best_rots = best_rots.drop_duplicates(subset = ['tic'])
