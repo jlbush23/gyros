@@ -36,8 +36,8 @@ def contamination_plot(fig,gaia_contam,median_im,im_header,target_df):
         Plot image and add grid lines.
         """
         plt.imshow(image, origin = 'lower', cmap = plt.cm.YlGnBu_r, 
-               vmax = np.nanpercentile(image, 92),
-               vmin = np.nanpercentile(image, 5))
+               vmax = np.nanpercentile(image, 98),
+               vmin = np.nanpercentile(image, 2))
         cbar = plt.colorbar(fraction = 0.04, orientation = 'horizontal', pad = 0.12)
         cbar.ax.get_yaxis().labelpad = 15
         cbar.ax.set_xlabel('Flux (e-/s)')#, rotation=180)
