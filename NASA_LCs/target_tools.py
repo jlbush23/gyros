@@ -69,3 +69,5 @@ def contamination_plot(fig,gaia_contam,median_im,im_header,target_df):
     
     plt.title('TIC ' + str(target_df['tic']) + ": (Tmag = " + str(round(target_df['Tmag'],2)) + 
                            ", ContRatio = " + str(round(target_df['contratio'],5)) + ")")
+    
+    return(fig)
