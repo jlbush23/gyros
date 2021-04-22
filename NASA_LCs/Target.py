@@ -45,10 +45,18 @@ class Target:
         #create target df
         self.target_df = self.TIC_query.merge(right = self.gaia_query, on = 'tic', how = 'left').drop_duplicates(subset = ['tic']).reset_index(drop=True)
                 
-    def add_lk_LCs(self):
-        self.all_LCs, self.spoc120_lc, self.lk_search_table = lk_int.get_lk_LCs(tic = self.tic)
-        if len(self.spoc120_lc) > 0: self.available_attributes.append('spoc120_lc')
-        if len(self.all_LCs) > 0: self.available_attributes.append('all_LCs')
+    def add_spoc_LCs(self):
+        # self.all_LCs, self.spoc120_lc, self.lk_search_table = lk_int.get_lk_LCs(tic = self.tic)
+        # if len(self.spoc120_lc) > 0: self.available_attributes.append('spoc120_lc')
+        # if len(self.all_LCs) > 0: self.available_attributes.append('all_LCs')
+        spoc_lc,pipeline_mask,threshold_mask,median_im,im_header = lk_int.tpf_sap(tic = self.tic)
+        self.spoc_lc = spoc_lc
+        self.spoc_lc_dict = {'pipeline_mask':pipeline_mask,
+                             'threshold_mask':threshold_mask,
+                             'median_im':median_im,
+                             'im_header':im_header}
+        self.available_attributes.append('spoc_lc')
+        self.available_attributes.append('spoc_lc_dict')
         
         
     def add_cpm_LC(self,cpm_kwargs=None):
@@ -70,40 +78,7 @@ class Target:
                                                 median_im = self.median_cpm_im,
                                                 im_header = self.cpm_im_header,
                                                 target_df = self.target_df)
-    
-    def run_spoc_rots(self,min_freq = 1/30):
-        flux_type = ['sap_flux','pdcsap_flux']
-        flux_err_avail = True
-        try:
-            for flux in flux_type:
-                LS_res,LS_periodogram_df = rot_tools.my_LS_multi_sector(lc_df = self.spoc120_lc,
-                                                                          flux_type = flux,
-                                                                          flux_err_avail=flux_err_avail,
-                                                                          min_freq=min_freq)
-                AC_res,AC_periodogram = rot_tools.exo_acf_multi_sector(lc_df = self.spoc120_lc,
-                                                                            flux_type = flux,
-                                                                            flux_err_avail=flux_err_avail,
-                                                                            max_per = 1/min_freq)
-                amp_df = rot_tools.amp_multi_sector(lc_df = self.spoc120_lc, flux_type = flux)
-                rot_fig = rot_tools.period_graph(target_name = 'TIC ' + str(self.tic),
-                                                      lc_df = self.spoc120_lc, flux_type = flux,
-                                                      LS_res = LS_res, LS_periodogram = LS_periodogram_df,
-                                                      AC_res = AC_res, AC_periodogram = AC_periodogram)
                 
-                if flux == 'sap_flux':
-                    self.sap_rot_dict = {'LS_res':LS_res,'LS_periodogram':LS_periodogram_df,
-                                         'AC_res':AC_res,'AC_periodogram':AC_periodogram,
-                                         'amp_df':amp_df,'rot_fig':rot_fig}
-                    self.available_attributes.append('sap_rot_dict')
-                if flux == 'pdcsap_flux':
-                    self.pdc_rot_dict = {'LS_res':LS_res,'LS_periodogram':LS_periodogram_df,
-                                         'AC_res':AC_res,'AC_periodogram':AC_periodogram,
-                                         'amp_df':amp_df,'rot_fig':rot_fig}
-                    self.available_attributes.append('pdc_rot_dict')
-            print("Rotations added!")
-        except:
-            print("Need to run 'download' function first!")
-            
     def run_cpm_rots(self,min_freq = 1/30):
         if 'cpm_lc' in self.available_attributes:
             flux_type = ['cpm']
@@ -119,15 +94,11 @@ class Target:
                                                                                 flux_err_avail=flux_err_avail,
                                                                                 max_per = 1/min_freq)
                     amp_df = rot_tools.amp_multi_sector(lc_df = self.cpm_lc, flux_type = flux)
-                    rot_fig = rot_tools.period_graph(target_name = 'TIC ' + str(self.tic),
-                                                          lc_df = self.cpm_lc, flux_type = flux,
-                                                          LS_res = LS_res, LS_periodogram = LS_periodogram_df,
-                                                          AC_res = AC_res, AC_periodogram = AC_periodogram)
-                    
+                
                     if flux == 'cpm':
                         self.cpm_rot_dict = {'LS_res':LS_res,'LS_periodogram':LS_periodogram_df,
                                              'AC_res':AC_res,'AC_periodogram':AC_periodogram,
-                                             'amp_df':amp_df,'rot_fig':rot_fig}
+                                             'amp_df':amp_df}
                         self.available_attributes.append('cpm_rot_dict')
                 print("Rotations added!")
             except:
@@ -136,3 +107,90 @@ class Target:
         else: 
             self.cpm_rot_dict = {}
             print("Need to run 'download' function first!")
+            
+    def cpm_rot_fig(self):
+        if 'cpm_rot_dict' in self.available_attributes:
+            LS_res = self.cpm_rot_dict['LS_res']
+            LS_periodogram = self.cpm_rot_dict['LS_periodogram']
+            AC_res = self.cpm_rot_dict['AC_res']
+            AC_periodogram = self.cpm_rot_dict['AC_periodogram']
+            self.cpm_rot_fig = rot_tools.period_graph(target_name = 'TIC ' + str(self.tic),
+                                          lc_df = self.cpm_lc, flux_type = 'cpm',
+                                          LS_res = LS_res, LS_periodogram = LS_periodogram,
+                                          AC_res = AC_res, AC_periodogram = AC_periodogram)
+        else:
+            print("Need to run_cpm_rots first!")
+
+    def run_spoc_rots(self,min_freq = 1/30):
+        # flux_type = ['sap_flux','pdcsap_flux']
+        # flux_err_avail = True
+        # try:
+        #     for flux in flux_type:
+        #         LS_res,LS_periodogram_df = rot_tools.my_LS_multi_sector(lc_df = self.spoc120_lc,
+        #                                                                   flux_type = flux,
+        #                                                                   flux_err_avail=flux_err_avail,
+        #                                                                   min_freq=min_freq)
+        #         AC_res,AC_periodogram = rot_tools.exo_acf_multi_sector(lc_df = self.spoc120_lc,
+        #                                                                     flux_type = flux,
+        #                                                                     flux_err_avail=flux_err_avail,
+        #                                                                     max_per = 1/min_freq)
+        #         amp_df = rot_tools.amp_multi_sector(lc_df = self.spoc120_lc, flux_type = flux)
+        #         rot_fig = rot_tools.period_graph(target_name = 'TIC ' + str(self.tic),
+        #                                               lc_df = self.spoc120_lc, flux_type = flux,
+        #                                               LS_res = LS_res, LS_periodogram = LS_periodogram_df,
+        #                                               AC_res = AC_res, AC_periodogram = AC_periodogram)
+                
+        #         if flux == 'sap_flux':
+        #             self.sap_rot_dict = {'LS_res':LS_res,'LS_periodogram':LS_periodogram_df,
+        #                                  'AC_res':AC_res,'AC_periodogram':AC_periodogram,
+        #                                  'amp_df':amp_df,'rot_fig':rot_fig}
+        #             self.available_attributes.append('sap_rot_dict')
+        #         if flux == 'pdcsap_flux':
+        #             self.pdc_rot_dict = {'LS_res':LS_res,'LS_periodogram':LS_periodogram_df,
+        #                                  'AC_res':AC_res,'AC_periodogram':AC_periodogram,
+        #                                  'amp_df':amp_df,'rot_fig':rot_fig}
+        #             self.available_attributes.append('pdc_rot_dict')
+        #     print("Rotations added!")
+        # except:
+        #     print("Need to run 'download' function first!")
+        if 'spoc_lc' in self.available_attributes:
+            flux_type = ['flux']
+            flux_err_avail = True
+            try:
+                for flux in flux_type:
+                    LS_res,LS_periodogram_df = rot_tools.my_LS_multi_sector(lc_df = self.spoc_lc,
+                                                                              flux_type = flux,
+                                                                              flux_err_avail=flux_err_avail,
+                                                                              min_freq=min_freq)
+                    AC_res,AC_periodogram = rot_tools.exo_acf_multi_sector(lc_df = self.spoc_lc,
+                                                                                flux_type = flux,
+                                                                                flux_err_avail=flux_err_avail,
+                                                                                max_per = 1/min_freq)
+                    amp_df = rot_tools.amp_multi_sector(lc_df = self.spoc_lc, flux_type = flux)
+                
+                    if flux == 'flux':
+                        self.spoc_rot_dict = {'LS_res':LS_res,'LS_periodogram':LS_periodogram_df,
+                                             'AC_res':AC_res,'AC_periodogram':AC_periodogram,
+                                             'amp_df':amp_df}
+                        self.available_attributes.append('spoc_rot_dict')
+                print("Rotations added!")
+            except:
+                self.cpm_rot_dict = {}
+                print("Need to run 'download' function first!")
+        else: 
+            self.cpm_rot_dict = {}
+            print("Need to run 'download' function first!")        
+        
+    def spoc_rot_fig(self):
+        if 'spoc_rot_dict' in self.available_attributes:
+            LS_res = self.spoc_rot_dict['LS_res']
+            LS_periodogram = self.spoc_rot_dict['LS_periodogram']
+            AC_res = self.spoc_rot_dict['AC_res']
+            AC_periodogram = self.spoc_rot_dict['AC_periodogram']
+            self.spoc_rot_fig = rot_tools.period_graph(target_name = 'TIC ' + str(self.tic),
+                                          lc_df = self.spoc_lc, flux_type = 'flux',
+                                          LS_res = LS_res, LS_periodogram = LS_periodogram,
+                                          AC_res = AC_res, AC_periodogram = AC_periodogram)
+        else:
+            print("Need to run_spoc_rots first!")
+        
