@@ -23,10 +23,13 @@ import NASA_LCs.catalog_queries as catQ
 
 from uvwxyz.xyzuvw import xyz,uvw
 
-def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm']):
+def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], group_toi_dict = None):
     ## run a general group given a group df with ra,dec columns    
     #create group
-    group = Group(name = group_name, group_df = group_df)
+    if group_toi_dict is None:
+        group = Group(name = group_name, group_df = group_df)
+    else:
+        group = Group(name = group_name, group_df = group_df, group_toi_dict = group_toi_dict)
     
     # add TIC catalog info
     if 'tic' in group_df.columns.to_numpy(dtype = 'str'):
@@ -42,8 +45,11 @@ def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm']):
     group.add_tess_LCs(download_dir = lc_download_dir, lc_types = lc_types)
     save_group_object(group,group_fn)
     
-    # add Gaia query    
-    group.add_gaia_info(id_col_name = 'tic',galactic_coords = True,delta_pm = False)
+    # add Gaia query
+    if group_toi_dict is None:    
+        group.add_gaia_info(id_col_name = 'tic',galactic_coords = True,delta_pm = False)
+    else:
+        group.add_gaia_info(id_col_name = 'tic',galactic_coords = True, delta_pm = True)
     save_group_object(group,group_fn)
     
     #organize best_rots, Tmag summary
