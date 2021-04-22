@@ -36,20 +36,24 @@ class Group:
         self.TIC_query = self.TIC_query.rename(columns = {'ID':'tic'})
         self.attributes_list.append('tics')
         self.attributes_list.append('TIC_query')
-    def add_gaia_info(self, ra_col_name = 'ra', dec_col_name = 'dec', gaia_kwrgs = 'all', id_col_name = None, galactic_coords = True):
+    def add_gaia_info(self, ra_col_name = 'ra', dec_col_name = 'dec', gaia_kwrgs = 'all', id_col_name = None, galactic_coords = True, delta_pm = True):
         self.gaia_query = catQ.get_gaia_data_bulk(query_df = self.group_df,
                                                  ra_col_name = ra_col_name, dec_col_name = dec_col_name,
                                                  gaia_kwrgs = gaia_kwrgs, id_col_name = id_col_name)        
         
         if galactic_coords == True:
             ##update this function to take option reference tic
-            self.gaia_query = gt.add_gaia_galactic_coords(tic = self.group_toi_dict['tic'], gaia_query_df = self.gaia_query)
+            if delta_pm == True:
+                self.gaia_query = catQ.add_gaia_galactic_coords(gaia_query = self.gaia_query, tic = self.group_toi_dict['tic'])
+            else:
+                self.gaia_query = catQ.add_gaia_galactic_coords(gaia_query = self.gaia_query, tic = None)
             
+                
         self.attributes_list.append('gaia_query')    
     def add_tess_LCs(self,download_dir = None, lc_types = ['spoc','cpm']):
         ## need to expand to add spoc rots later
         tic_list = self.tics
-        self.rots_dict_collection = gt.bulk_download(tic_list = tic_list, download_dir = download_dir, lc_types = ['cpm'])
+        self.rots_dict_collection = gt.bulk_download(tic_list = tic_list, download_dir = download_dir, lc_types = lc_types)
         
         ## below could be used to update best_rots selection
         
