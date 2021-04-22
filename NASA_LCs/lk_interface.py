@@ -16,6 +16,50 @@ import pickle as pkl
 from astropy.table import Table
 #from astropy.table import vstack
 
+def tpf_sap(tic):
+    #search targetpixelfiles for given TIC ID
+    search_res = lk.search_targetpixelfile('TIC ' + str(tic))
+    #initialize SPOC found,first found
+    spoc_found = False
+    spoc_first = False
+    
+    
+    lc_holder = []
+    for i in range(len(search_res)):
+        #select search result object
+        search_i = search_res[i]
+        #skip if not SPOC, 120 s exposure
+        if (search_i.author.data[0] == 'SPOC') & (search_i.exptime.data[0] == 120):
+            print("Found SPOC " + str(search_i.mission[0]) + " data for TIC " + str(tic) + "!")
+            spoc_found = True
+            if (spoc_first == False) & (spoc_first is not None):
+                spoc_first = True
+        else:
+            continue
+        tpf = search_res[i].download()
+        if spoc_first == True:
+            # get apertures, median image, and  WCS data for contamination plot
+            pipeline_mask = tpf.pipeline_mask
+            threshold_mask = tpf.create_threshold_mask(threshold = 10, reference_pixel = 'center')
+            median_im = np.nanmedian(tpf.hdu[1].data['FLUX'],axis = 0)
+            im_header = tpf.hdu[2] #used for later WCS projection
+            #reset spoc_first to None
+            spoc_first = None
+            
+        # get lightcurve with pipeline mask
+        lc = tpf.to_lightcurve(aperture_mask = tpf.pipeline_mask)
+        lc['sector'] = np.repeat(a = lc.sector, repeats = len(lc)) #add sector label for my plotting functions
+        lc_holder.append(lc.to_pandas().reset_index(drop = False)) #store in lc_holder
+        
+    if spoc_found == False:
+        print("No SPOC data found for TIC " + str(tic) + ".")
+        spoc_lc = pd.DataFrame()
+        pipeline_mask = np.array([])
+    else:
+        spoc_lc = pd.concat(lc_holder) #combine lc into 1 pandas dataframe
+        
+    return(spoc_lc,pipeline_mask,threshold_mask,median_im,im_header)
+
 
 def get_lk_LCs(tic):
     #search MAST archive with tic. eventually needs to change to search_lightcurve,
