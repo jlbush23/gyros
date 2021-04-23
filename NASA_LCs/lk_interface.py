@@ -42,7 +42,7 @@ def tpf_sap(tic):
             pipeline_mask = tpf.pipeline_mask
             threshold_mask = tpf.create_threshold_mask(threshold = 10, reference_pixel = 'center')
             median_im = np.nanmedian(tpf.hdu[1].data['FLUX'],axis = 0)
-            im_header = tpf.hdu[2] #used for later WCS projection
+            im_header = tpf.hdu[2].header #used for later WCS projection
             #reset spoc_first to None
             spoc_first = None
             
