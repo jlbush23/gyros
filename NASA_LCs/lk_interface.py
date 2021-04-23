@@ -48,6 +48,7 @@ def tpf_sap(tic):
             
         # get lightcurve with pipeline mask
         lc = tpf.to_lightcurve(aperture_mask = tpf.pipeline_mask)
+        lc = lc.remove_outliers(sigma = 5.0)
         lc['sector'] = np.repeat(a = lc.sector, repeats = len(lc)) #add sector label for my plotting functions
         lc_holder.append(lc.to_pandas().reset_index(drop = False)) #store in lc_holder
         
