@@ -21,8 +21,6 @@ from NASA_LCs.Target import Target
 from NASA_LCs.Group import Group
 import NASA_LCs.catalog_queries as catQ
 
-from uvwxyz.xyzuvw import xyz,uvw
-
 def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], group_toi_dict = None):
     ## run a general group given a group df with ra,dec columns    
     #create group
