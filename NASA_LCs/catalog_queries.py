@@ -19,6 +19,8 @@ import numpy as np
 
 import os
 
+from uvwxyz.xyzuvw import xyz,uvw
+
 
 def get_coord_from_ID(id_type, ID):    
     if id_type == 'TIC':
