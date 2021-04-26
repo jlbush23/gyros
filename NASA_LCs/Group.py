@@ -50,10 +50,13 @@ class Group:
             
                 
         self.attributes_list.append('gaia_query')    
-    def add_tess_LCs(self,download_dir = None, lc_types = ['spoc','cpm']):
+    def add_tess_LCs(self,download_dir = None, lc_types = ['spoc','cpm'], spoc_kwrgs = ['tpf','lk_lc']):
         ## need to expand to add spoc rots later
         tic_list = self.tics
-        self.rots_dict_collection = gt.bulk_download(tic_list = tic_list, download_dir = download_dir, lc_types = lc_types)
+        self.rots_dict_collection = gt.bulk_download(tic_list = tic_list, 
+                                                     download_dir = download_dir, 
+                                                     lc_types = lc_types,
+                                                     spoc_kwrgs = spoc_kwrgs)
         
         ## below could be used to update best_rots selection
         
