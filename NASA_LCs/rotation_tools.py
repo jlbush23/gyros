@@ -243,6 +243,8 @@ def amp_multi_sector(lc_df,flux_type):
     for i,sector in enumerate(sector_list):        
         temp_lc = lc_df[lc_df['sector'] == sector]
         temp_flux = temp_lc[flux_type]
+        if flux_type != 'cpm':
+            temp_flux = temp_flux/np.nanmedian(temp_flux)
         amp = measure_amp(flux = temp_flux)
         if i == 0: 
             amp_df = pd.DataFrame(data = {'amp':[amp],'sector':[sector]})
