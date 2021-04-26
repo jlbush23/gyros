@@ -251,7 +251,7 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm']):
                 
         if ('tpf' in targ_rot_dict.keys()) & ('spoc' in lc_types):
             tpf_rot_dict = targ_rot_dict['tpf']
-            if 'LS_res' in spoc_rot_dict.keys():
+            if 'LS_res' in tpf_rot_dict.keys():
                 try:
                     tpf_LS_res = tpf_rot_dict['LS_res']
                 except KeyError:
