@@ -203,7 +203,7 @@ class Target:
             
     def spoc_rot_fig(self):
         flux_type = ['sap_flux','pdcsap_flux']
-        if 'spoc_rot_dict' in self.available_attributes:
+        if 'pdc_rot_dict' in self.available_attributes:
             for flux in flux_type:
                 if flux == 'sap_flux':
                     LS_res = self.sap_rot_dict['LS_res']
