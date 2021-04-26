@@ -183,10 +183,7 @@ class Target:
                 print("Rotations added!")
             except:
                 self.tpf_rot_dict = {}
-                print("Need to run 'download' function first!")
-        else: 
-            self.tpf_rot_dict = {}
-            print("Need to run 'download' function first!")        
+                print("Need to run 'download' function first!")        
         
     def tpf_rot_fig(self):
         if 'tpf_rot_dict' in self.available_attributes:
