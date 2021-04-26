@@ -131,17 +131,20 @@ class Target:
         if 'spoc_lc' in self.available_attributes:
             flux_type = ['sap_flux','pdcsap_flux']
             flux_err_avail = True
+            keep_cols = ['time','sap_flux','sap_flux_err','pdcsap_flux','pdcsap_flux_err',
+                         'sector']
+            spoc_lc = self.spoc_lc[keep_cols]
             try:
                 for flux in flux_type:
-                    LS_res,LS_periodogram_df = rot_tools.my_LS_multi_sector(lc_df = self.spoc_lc,
+                    LS_res,LS_periodogram_df = rot_tools.my_LS_multi_sector(lc_df = spoc_lc,
                                                                               flux_type = flux,
                                                                               flux_err_avail=flux_err_avail,
                                                                               min_freq=min_freq)
-                    AC_res,AC_periodogram = rot_tools.exo_acf_multi_sector(lc_df = self.spoc_lc,
+                    AC_res,AC_periodogram = rot_tools.exo_acf_multi_sector(lc_df = spoc_lc,
                                                                                 flux_type = flux,
                                                                                 flux_err_avail=flux_err_avail,
                                                                                 max_per = 1/min_freq)
-                    amp_df = rot_tools.amp_multi_sector(lc_df = self.spoc_lc, flux_type = flux)
+                    amp_df = rot_tools.amp_multi_sector(lc_df = spoc_lc, flux_type = flux)
                     
                     if flux == 'sap_flux':
                         self.sap_rot_dict = {'LS_res':LS_res,'LS_periodogram':LS_periodogram_df,
