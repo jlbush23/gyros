@@ -146,12 +146,12 @@ class Target:
                     if flux == 'sap_flux':
                         self.sap_rot_dict = {'LS_res':LS_res,'LS_periodogram':LS_periodogram_df,
                                               'AC_res':AC_res,'AC_periodogram':AC_periodogram,
-                                              'amp_df':amp_df,'rot_fig':rot_fig}
+                                              'amp_df':amp_df}
                         self.available_attributes.append('sap_rot_dict')
                     if flux == 'pdcsap_flux':
                         self.pdc_rot_dict = {'LS_res':LS_res,'LS_periodogram':LS_periodogram_df,
                                               'AC_res':AC_res,'AC_periodogram':AC_periodogram,
-                                              'amp_df':amp_df,'rot_fig':rot_fig}
+                                              'amp_df':amp_df}
                         self.available_attributes.append('pdc_rot_dict')
                 print("Rotations added!")
             except:
