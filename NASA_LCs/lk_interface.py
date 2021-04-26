@@ -17,6 +17,7 @@ from astropy.table import Table
 #from astropy.table import vstack
 
 def tpf_sap(tic):
+
     #search targetpixelfiles for given TIC ID
     search_res = lk.search_targetpixelfile('TIC ' + str(tic))
     #initialize SPOC found,first found
@@ -65,7 +66,7 @@ def tpf_sap(tic):
 def get_lk_LCs(tic):
     #search MAST archive with tic. eventually needs to change to search_lightcurve,
     #but issues with .download_all() function from search_lightcurve
-    lcf_search = search_lightcurve('tic ' + str(tic))
+    lcf_search = search_lightcurve('TIC ' + str(tic))
     
     #save search table and remove all HLSP from results 
     #(so far, only QLP HLSP seem compatitable with lightkurve)
@@ -94,42 +95,75 @@ def get_lk_LCs(tic):
     # with open(lc_fn,'wb') as outfile:
     #     pkl.dump((pdc_lc_df,sap_lc_df),outfile)
         
-def spoc120(lcf_search, all_lcs):
-    '''
-    Extracts 2-minute cadence SPOC LCs from a lightkurve query.
+def spoc120(tic):
+    # '''
+    # Extracts 2-minute cadence SPOC LCs from a lightkurve query.
 
-    Parameters
-    ----------
-    lcf_search : lk.search_lightcurvefile object
-        DESCRIPTION.
-    all_lcs : lk.search_lightcurvefile.download_all().data object
-        DESCRIPTION.
+    # Parameters
+    # ----------
+    # lcf_search : lk.search_lightcurvefile object
+    #     DESCRIPTION.
+    # all_lcs : lk.search_lightcurvefile.download_all().data object
+    #     DESCRIPTION.
 
-    Returns
-    -------
-    spoc_120_lc : pandas dataframe
-        SPOC 2 minute cadence for all sectors with sector label column
+    # Returns
+    # -------
+    # spoc_120_lc : pandas dataframe
+    #     SPOC 2 minute cadence for all sectors with sector label column
 
-    '''
-    search_df = lcf_search.table.to_pandas()
-    spoc120_index = list(search_df[(search_df['author'] == 'SPOC') & (search_df['exptime'] == 120)].index.to_numpy(dtype = 'int'))
-    if (len(spoc120_index) > 0) & (len(all_lcs) > 0):
-        spoc120_LCs = [all_lcs[i] for i in spoc120_index]
+    # '''
+    # search_df = lcf_search.table.to_pandas()
+    # spoc120_index = list(search_df[(search_df['author'] == 'SPOC') & (search_df['exptime'] == 120)].index.to_numpy(dtype = 'int'))
+    # if (len(spoc120_index) > 0) & (len(all_lcs) > 0):
+    #     spoc120_LCs = [all_lcs[i] for i in spoc120_index]
     
-        for i,lc in enumerate(spoc120_LCs):
-            sector = lc.sector
+    #     for i,lc in enumerate(spoc120_LCs):
+    #         sector = lc.sector
             
-            temp_lc = lc.to_pandas().reset_index()[['time','pdcsap_flux','pdcsap_flux_err','sap_flux','sap_flux_err','quality']]
+    #         temp_lc = lc.to_pandas().reset_index()[['time','pdcsap_flux','pdcsap_flux_err','sap_flux','sap_flux_err','quality']]
             
-            sector_repeats = np.repeat(a = sector, repeats = len(temp_lc))
-            temp_lc['sector'] = sector_repeats
+    #         sector_repeats = np.repeat(a = sector, repeats = len(temp_lc))
+    #         temp_lc['sector'] = sector_repeats
             
-            if i == 0:
-                spoc120_full_LC = temp_lc
-            else:
-                spoc120_full_LC = pd.concat([spoc120_full_LC,temp_lc])
+    #         if i == 0:
+    #             spoc120_full_LC = temp_lc
+    #         else:
+    #             spoc120_full_LC = pd.concat([spoc120_full_LC,temp_lc])
                 
-        return(spoc120_full_LC)
+    #     return(spoc120_full_LC)
+    # else:
+    #     return(pd.DataFrame())
+    
+    #search light curve for given TIC ID
+    search_res = lk.search_lightcurve('TIC ' + str(tic))
+    #initialize SPOC found,first found
+    spoc_found = False
+    spoc_first = False
+    
+    lc_holder = []
+    for i in range(len(search_res)):
+        #select search result object
+        search_i = search_res[i]
+        #skip if not SPOC, 120 s exposure
+        if (search_i.author.data[0] == 'SPOC') & (search_i.exptime.data[0] == 120):
+            print("Found SPOC " + str(search_i.mission[0]) + " data for TIC " + str(tic) + "!")
+            spoc_found = True
+            if (spoc_first == False) & (spoc_first is not None):
+                spoc_first = True
+        else:
+            continue
+        lk_lc = search_res[i].download()
+        lk_lc = lk_lc.remove_outliers(sigma = 5.0)
+        lk_lc_df = lk_lc.to_pandas().reset_index(drop=False)
+        
+        lk_lc_df['sector'] = np.repeat(a = lk_lc.sector, repeats = len(lk_lc)) #add sector label for my plotting functions
+        lc_holder.append(lk_lc_df) #store in lc_holder
+        
+    if spoc_found == False:
+        print("No SPOC data found for TIC " + str(tic) + ".")
+        spoc_lc = pd.DataFrame()
     else:
-        return(pd.DataFrame())
+        spoc_lc = pd.concat(lc_holder) #combine lc into 1 pandas dataframe
+        
+    return(spoc_lc)
         
