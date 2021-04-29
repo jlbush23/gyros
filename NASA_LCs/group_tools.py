@@ -21,7 +21,7 @@ from NASA_LCs.Target import Target
 from NASA_LCs.Group import Group
 import NASA_LCs.catalog_queries as catQ
 
-def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], spoc_kwrgs = None, group_toi_dict = None):
+def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], spoc_kwrgs = None, group_toi_dict = None, target_catQ = True):
     ## run a general group given a group df with ra,dec columns    
     #create group
     if group_toi_dict is None:
@@ -34,7 +34,8 @@ def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], spoc_k
         append_tics = False
     else:
         append_tics = True
-    group.add_TIC_info(append_tics = append_tics)
+    if target_catQ == True:
+        group.add_TIC_info(append_tics = append_tics)
     save_group_object(group,group_fn)
     
     #add lcs, save group with rotation_dict_collection
@@ -44,10 +45,11 @@ def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], spoc_k
     save_group_object(group,group_fn)
     
     # add Gaia query
-    if group_toi_dict is None:    
-        group.add_gaia_info(id_col_name = 'tic',galactic_coords = True,delta_pm = False)
-    else:
-        group.add_gaia_info(id_col_name = 'tic',galactic_coords = True, delta_pm = True)
+    if target_catQ == True:
+        if group_toi_dict is None:    
+            group.add_gaia_info(id_col_name = 'tic',galactic_coords = True,delta_pm = False)
+        else:
+            group.add_gaia_info(id_col_name = 'tic',galactic_coords = True, delta_pm = True)
     save_group_object(group,group_fn)
     
     #organize best_rots, Tmag summary
