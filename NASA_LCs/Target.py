@@ -79,7 +79,7 @@ class Target:
                                  n = n,
                                  size = size,
                                  l2_reg = l2_reg,
-                                 exclusion_size = exclusion _size,
+                                 exclusion_size = exclusion_size,
                                  pred_pix_method = pred_pix_method,
                                  save_lc = ave_lc, keep_tesscut keep_tesscut,
                                  add_poly = add_poly,
