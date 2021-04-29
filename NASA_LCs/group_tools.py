@@ -21,7 +21,7 @@ from NASA_LCs.Target import Target
 from NASA_LCs.Group import Group
 import NASA_LCs.catalog_queries as catQ
 
-def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], spoc_kwrgs = None, group_toi_dict = None, target_catQ = True):
+def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], spoc_kwrgs = None, group_toi_dict = None, target_catQ = True, add_tics = False):
     ## run a general group given a group df with ra,dec columns    
     #create group
     if group_toi_dict is None:
@@ -32,6 +32,7 @@ def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], spoc_k
     # add TIC catalog info
     if 'tic' in group_df.columns.to_numpy(dtype = 'str'):
         append_tics = False
+        group.tics = group_df['tic'].to_numpy(dtype = 'str')
     else:
         append_tics = True
     if target_catQ == True:
