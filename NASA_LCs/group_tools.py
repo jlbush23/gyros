@@ -295,6 +295,7 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm']):
                 best_sap_rots.append(best_sector_res)
             
         if ('pdc' in targ_rot_dict.keys()) & ('spoc' in lc_types):
+            pdc_rot_dict = targ_rot_dict['pdc']
             if 'LS_res' in pdc_rot_dict.keys():
                 pdc_rot_dict = targ_rot_dict['pdc']
                 try:
