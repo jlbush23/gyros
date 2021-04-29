@@ -19,7 +19,7 @@ import NASA_LCs.target_tools as tt
 from tess_cpm.interface import cpm_interface as cpm_int
 
 class Target:
-    def __init__(self,tic = None, ra = None, dec = None):
+    def __init__(self,tic = None, ra = None, dec = None, query_info = False):
         self.tic = tic
         self.ra = ra
         self.dec = dec
@@ -37,6 +37,10 @@ class Target:
             else:
                 print("Please re-initialize Target object with TIC or RA/Dec.")
                 
+        if query_info == True:
+            self.target_info_query()
+                
+    def target_info_query(self):
         ##add target TIC and Gaia info
         self.TIC_query,_ = catQ.get_TIC_data(ra = self.ra, dec = self.dec)
         self.TIC_query = self.TIC_query.rename(columns = {'ID':'tic','ra':'RA','dec':'DEC'})
@@ -45,6 +49,8 @@ class Target:
         #create target df
         self.target_df = self.TIC_query.merge(right = self.gaia_query, on = 'tic', how = 'left').drop_duplicates(subset = ['tic']).reset_index(drop=True)
                 
+        
+        
     def add_spoc_LCs(self,tpf = True,lk_lc=True):
         # self.all_LCs, self.spoc120_lc, self.lk_search_table = lk_int.get_lk_LCs(tic = self.tic)
         # if len(self.spoc120_lc) > 0: self.available_attributes.append('spoc120_lc')
@@ -65,9 +71,20 @@ class Target:
             self.available_attributes.append('spoc_lc')
         
         
-    def add_cpm_LC(self,cpm_kwargs=None):
+    def add_cpm_LC(self,bkg_subtract = False, bkg_n = 0, k=100, n=100, size = 50, l2_reg = [0.1], exclusion_size = 5, pred_pix_method = "similar_brightness", save_lc = False, keep_tesscut = False, add_poly = False, poly_scale = 2, poly_num_terms = 4):
         cpm_obj = cpm_int(tic = self.tic)
-        cpm_obj.download_extract()
+        cpm_obj.download_extract(bkg_subtract = bkg_subtract,
+                                 bkg_n = bkg_n,
+                                 k = k,
+                                 n = n,
+                                 size = size,
+                                 l2_reg = l2_reg,
+                                 exclusion_size = exclusion _size,
+                                 pred_pix_method = pred_pix_method,
+                                 save_lc = ave_lc, keep_tesscut keep_tesscut,
+                                 add_poly = add_poly,
+                                 poly_scale = poly_scale, 
+                                 poly_num_terms = poly_num_terms)
         self.cpm_lc = cpm_obj.lc_df
         self.median_cpm_im = cpm_obj.median_im
         self.cpm_im_header = cpm_obj.im_header
