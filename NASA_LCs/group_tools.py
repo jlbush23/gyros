@@ -143,7 +143,7 @@ def read_target_object(filepath):
 def bulk_download(tic_list, download_dir, lc_types = ['spoc','cpm'],spoc_kwrgs = None,
                   run_rotations = True, min_freq = 1/30,
                   #rot_options = {'flux_type':['spoc','cpm'],'flux_err_avail':[True,False],'min_freq':1/30},
-                  save_objects = True, keep_fits = False, group_obj = None, group_fn):
+                  save_objects = True, keep_fits = False, group_obj = None, group_fn = None):
     rots_dict_collection = {}
     for i,tic in enumerate(tic_list):
         print("Working on object " + str(i+1) + "/" + str(len(tic_list)) + ".")
@@ -223,7 +223,10 @@ def bulk_download(tic_list, download_dir, lc_types = ['spoc','cpm'],spoc_kwrgs =
         rots_dict_collection[str(target_obj.tic)] = target_rots_dict
         if group_obj is not None: 
             group_obj.rots_dict_collection = rots_dict_collection
-            save_group_object(group, group_fn)
+            if group_fn is not None: 
+                save_group_object(group, group_fn)
+            else:
+                print("Can't save group, no save filepath provided.")
         
         del target_obj        
         
