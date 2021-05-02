@@ -224,7 +224,7 @@ def bulk_download(tic_list, download_dir, lc_types = ['spoc','cpm'],spoc_kwrgs =
         if group_obj is not None: 
             group_obj.rots_dict_collection = rots_dict_collection
             if group_fn is not None: 
-                save_group_object(group, group_fn)
+                save_group_object(group_obj, group_fn)
             else:
                 print("Can't save group, no save filepath provided.")
         
