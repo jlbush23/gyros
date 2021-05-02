@@ -21,7 +21,7 @@ from NASA_LCs.Target import Target
 from NASA_LCs.Group import Group
 import NASA_LCs.catalog_queries as catQ
 
-def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], spoc_kwrgs = None, group_toi_dict = None, target_catQ = True, add_tics = False):
+def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], spoc_kwrgs = None, group_toi_dict = None, target_catQ = True):
     ## run a general group given a group df with ra,dec columns    
     #create group
     if group_toi_dict is None:
@@ -39,10 +39,21 @@ def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], spoc_k
         group.add_TIC_info(append_tics = append_tics)
     save_group_object(group,group_fn)
     
-    #add lcs, save group with rotation_dict_collection
+    #add lcs, save group with rotation_dict_collection (individual targets rotation results)
     lc_download_dir = os.path.join(download_dir,'lc_pickles')
     if os.path.exists(lc_download_dir) == False: os.mkdir(lc_download_dir)
-    group.add_tess_LCs(download_dir = lc_download_dir, lc_types = lc_types, spoc_kwrgs = spoc_kwrgs)
+    
+    #add LCs by group method (issue with saving progress)
+    # group.add_tess_LCs(download_dir = lc_download_dir, lc_types = lc_types, spoc_kwrgs = spoc_kwrgs)
+    
+    #add LCs externally, to update/save group object after each target
+    rots_dict_collection = gt.bulk_download(tic_list = group.tics, 
+                                                     download_dir = lc_download_dir, 
+                                                     lc_types = lc_types,
+                                                     spoc_kwrgs = spoc_kwrgs,
+                                                     group_obj = group,
+                                                     group_fn = group_fn)
+    group.rots_dict_collection = rots_dict_collection
     save_group_object(group,group_fn)
     
     # add Gaia query
@@ -132,7 +143,7 @@ def read_target_object(filepath):
 def bulk_download(tic_list, download_dir, lc_types = ['spoc','cpm'],spoc_kwrgs = None,
                   run_rotations = True, min_freq = 1/30,
                   #rot_options = {'flux_type':['spoc','cpm'],'flux_err_avail':[True,False],'min_freq':1/30},
-                  save_objects = True, keep_fits = False):
+                  save_objects = True, keep_fits = False, group_obj = None, group_fn):
     rots_dict_collection = {}
     for i,tic in enumerate(tic_list):
         print("Working on object " + str(i+1) + "/" + str(len(tic_list)) + ".")
@@ -210,6 +221,9 @@ def bulk_download(tic_list, download_dir, lc_types = ['spoc','cpm'],spoc_kwrgs =
                 target_rots_dict['cpm'] = {}
         
         rots_dict_collection[str(target_obj.tic)] = target_rots_dict
+        if group_obj is not None: 
+            group_obj.rots_dict_collection = rots_dict_collection
+            save_group_object(group, group_fn)
         
         del target_obj        
         
