@@ -236,7 +236,7 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm'], spoc_kwrgs = 
     
     if (spoc_kwrgs is None) & ('spoc' in lc_types):
         print("Need to specificy 'spoc_kwrgs' for SPOC best rotations.")
-        break
+        return
     elif (spoc_kwrgs is not None) & ('spoc' in lc_types):
         if 'tpf_lc' in spoc_kwrgs: 
             tpf_lc = True
