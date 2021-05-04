@@ -232,8 +232,23 @@ def bulk_download(tic_list, download_dir, lc_types = ['spoc','cpm'],spoc_kwrgs =
         
     return(rots_dict_collection)
 
-def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm']):
+def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm'], spoc_kwrgs = None):
     
+    if (spoc_kwrgs is None) & ('spoc' in lc_types):
+        print("Need to specificy 'spoc_kwrgs' for SPOC best rotations.")
+        break
+    elif (spoc_kwrgs is not None) & ('spoc' in lc_types):
+        if 'tpf_lc' in spoc_kwrgs: 
+            tpf_lc = True
+        else:
+            tpf_lc = False
+        if 'lk_lc' in spoc_kwrgs: 
+            lk_lc = True
+        else:
+            lk_lc = False
+    else:
+        tpf_lc = lk_lc = False
+        
     ## somehow feed a dict of rot dicts instead?
     
     if 'spoc' in lc_types: 
