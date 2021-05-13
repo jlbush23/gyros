@@ -16,6 +16,8 @@ import pickle as pkl
 from astropy.table import Table
 #from astropy.table import vstack
 
+from tess_cpm.interface import cpm_interface as cpm_int
+
 def tpf_sap(tic):
 
     #search targetpixelfiles for given TIC ID
@@ -61,39 +63,6 @@ def tpf_sap(tic):
         spoc_lc = pd.concat(lc_holder) #combine lc into 1 pandas dataframe
         
     return(spoc_lc,pipeline_mask,threshold_mask,median_im,im_header)
-
-
-def get_lk_LCs(tic):
-    #search MAST archive with tic. eventually needs to change to search_lightcurve,
-    #but issues with .download_all() function from search_lightcurve
-    lcf_search = search_lightcurve('TIC ' + str(tic))
-    
-    #save search table and remove all HLSP from results 
-    #(so far, only QLP HLSP seem compatitable with lightkurve)
-    lcf_search_table = lcf_search.table
-    lcf_search_table =lcf_search_table[lcf_search_table['obs_collection'] == 'TESS']
-    
-    # lcf_df = lcf_search_table.to_pandas()
-    # all_lcs = []
-    # for i,row in lcf_df.iterrows():
-    #     temp_search_table = lcf_search_table[lcf_search_table['obs_id'] == row['obs_id']]
-    #     temp_search = lk.SearchResult(table = temp_search_table)
-    #     try:
-    #         all_LCs.append(temp_search.download())
-    #     except:
-    #         print("Error lk download.")
-    
-    #download all lightcurves from search result
-    lcf_search = lk.SearchResult(table = lcf_search_table)
-    lcf = lcf_search.download_all()
-    all_lcs = lcf.data #save all lightcurves to all_lcs list
-    
-    spoc120_lc = spoc120(lcf_search, all_lcs) #extract spoc120 LC if available
-    
-    return(all_lcs,spoc120_lc,lcf_search_table)
-    
-    # with open(lc_fn,'wb') as outfile:
-    #     pkl.dump((pdc_lc_df,sap_lc_df),outfile)
         
 def spoc120(tic):
     # '''
@@ -166,4 +135,86 @@ def spoc120(tic):
         spoc_lc = pd.concat(lc_holder) #combine lc into 1 pandas dataframe
         
     return(spoc_lc)
+
+def lk_tesscut(tic,ra = None,dec = None,size = 32):
+    #search light curve for given TIC ID
+    search_res = lk.search_tesscut('TIC ' + str(tic))
+    #initialize SPOC found,first found
+    tesscut_found = False
+    tesscut_first = False
+    
+    lc_holder = []
+    for i in range(len(search_res)):
+        #select search result object
+        search_i = search_res[i]
+        #skip if not TESScut
+        if (search_i.author[0] == 'TESScut'): #& (search_i.exptime.data[0] == 120):
+            print("Found " + str(search_i.mission[0]) + " TESScut data for TIC " + str(tic) + "!")
+            tesscut_found = True
+            if (tesscut_first == False) & (tesscut_first is not None):
+                tesscut_first = True
+        else:
+            continue
+        #download this sector's tesscut
+        lk_tesscut_obj = search_res[i].download(cutout_size = size)
+        #instantiate cpm_obj
+        cpm_obj = cpm_int(tic = tic,ra = ra,dec = dec)
+        #get cpm_lc for this sector by passing lk_tess_obj to cpm_obj
+        if i == 0:
+            med_im_header = True
+            lc_df,median_im,im_header = cpm_obj.lk_cpm_lc(lk_tesscut_obj = lk_tesscut_obj,
+                                                          med_im_header = med_im_header)
+        else:
+            med_im_header = False
+            lc_df = cpm_obj.lk_cpm_lc(lk_tesscut_obj = lk_tesscut_obj,
+                                      med_im_header = med_im_header)
+        #append to lc_holder for later concatenation
+        lc_holder.append(lk_lc_df) #store in lc_holder
         
+        #save median_im and im_header if i == 0
+        if i == 0:
+            median_im = cpm_obj.median_im
+            im_header = cpm_obj.im_header
+        
+        del cpm_obj
+        del lk_tesscut_obj
+        
+    if tesscut_found == False:
+        print("No TESScut data found for TIC " + str(tic) + ".")
+        tesscut_lc = median_im = im_header = pd.DataFrame()
+    else:
+        tesscut_lc = pd.concat(lc_holder) #combine lc into 1 pandas dataframe
+ 
+    return(tesscut_lc, median_im, im_header)
+ 
+def get_lk_LCs(tic):
+    #search MAST archive with tic. eventually needs to change to search_lightcurve,
+    #but issues with .download_all() function from search_lightcurve
+    lcf_search = search_lightcurve('TIC ' + str(tic))
+    
+    #save search table and remove all HLSP from results 
+    #(so far, only QLP HLSP seem compatitable with lightkurve)
+    lcf_search_table = lcf_search.table
+    lcf_search_table =lcf_search_table[lcf_search_table['obs_collection'] == 'TESS']
+    
+    # lcf_df = lcf_search_table.to_pandas()
+    # all_lcs = []
+    # for i,row in lcf_df.iterrows():
+    #     temp_search_table = lcf_search_table[lcf_search_table['obs_id'] == row['obs_id']]
+    #     temp_search = lk.SearchResult(table = temp_search_table)
+    #     try:
+    #         all_LCs.append(temp_search.download())
+    #     except:
+    #         print("Error lk download.")
+    
+    #download all lightcurves from search result
+    lcf_search = lk.SearchResult(table = lcf_search_table)
+    lcf = lcf_search.download_all()
+    all_lcs = lcf.data #save all lightcurves to all_lcs list
+    
+    spoc120_lc = spoc120(lcf_search, all_lcs) #extract spoc120 LC if available
+    
+    return(all_lcs,spoc120_lc,lcf_search_table)
+    
+    # with open(lc_fn,'wb') as outfile:
+    #     pkl.dump((pdc_lc_df,sap_lc_df),outfile)       
