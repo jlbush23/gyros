@@ -169,7 +169,7 @@ def lk_tesscut(tic,ra = None,dec = None,size = 32):
             lc_df = cpm_obj.lk_cpm_lc(lk_tesscut_obj = lk_tesscut_obj,
                                       med_im_header = med_im_header)
         #append to lc_holder for later concatenation
-        lc_holder.append(lk_lc_df) #store in lc_holder
+        lc_holder.append(lc_df) #store in lc_holder
         
         #save median_im and im_header if i == 0
         if i == 0:
