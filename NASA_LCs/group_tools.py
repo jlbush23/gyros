@@ -522,7 +522,7 @@ def tmag_plot(ax,tmag_df, tmag_summary, width = 0.35):
     
     ax.set_title("Hit Rate: " + str(tot_return) + " Ret / " + str(tot_avail) + " Uncontam = " + str(return_perc) + "%")# + " (Rots " + str(len(best_rots)) + " / " + str(len(group.group_df.drop_duplicates(subset = ['tic']))) + " Mems)")
 
-def ff_pc_seq(ax,plot_df,group_toi_dict,cont_thresh = 0.7, color_type = 'bp_rp', xlim = (0.05,4), title = None, lit_seq = ['Pleiades','Praesepe','Hyades']):
+def ff_pc_seq(ax,plot_df,group_toi_dict,cont_thresh = 0.7, color_type = 'bp_rp', xlim = (0.05,4), ylim = None, title = None, lit_seq = ['Pleiades','Praesepe','Hyades']):
     tic = group_toi_dict['tic']
     if 'toi' in group_toi_dict.keys():
         toi = group_toi_dict['toi']
@@ -580,6 +580,8 @@ def ff_pc_seq(ax,plot_df,group_toi_dict,cont_thresh = 0.7, color_type = 'bp_rp',
                 alpha = 1, edgecolors = 'black',
                 label = toi_label, marker = 'x')
     ax.legend(loc = 'lower left', fontsize = 'large', framealpha = 0.4)
+    if ylim is not None:
+        ax.set_ylim(ylim)
     
     if title is None:
         title = 'TIC ' + str(tic) + ' - FF Rotations'
