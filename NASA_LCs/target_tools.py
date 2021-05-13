@@ -96,8 +96,8 @@ def create_target_lc_dict(target):
     
     lc_dict = {}
 
-    if 'spoc_lc' in target.available_attributes: lc_dict['spoc_lc'] = target.spoc_lc
-    if 'tpf_lc' in target.available_attributes: lc_dict['tpf_lc'] = target.tpf_lc
+    if 'spoc_lc' in target.available_attributes: lc_dict['spoc'] = target.spoc_lc
+    if 'tpf_lc' in target.available_attributes: lc_dict['tpf'] = target.tpf_lc
     if 'cpm_lc' in target.available_attributes: lc_dict['cpm'] = target.cpm_lc
     
     return(lc_dict)
@@ -147,23 +147,26 @@ def plot_LCs(fig, spec, target,
     #plot all sectors on all axes
     flux_max = []
     flux_min = []
-    color_list = ['tab:blue','tab:orange','tab:green','tab:red','tab:purple','tab:brown',
-                  'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan','darkslateblue', 'gold', 'deepskyblue',
-                  'navy', 'orangered','springgreen','deeppink','dimgrey','darggoldenrod','violet','cadetblue']
-    # colors = ['b', 'r', 'g', 'c']
+    # color_list = ['tab:blue','tab:orange','tab:green','tab:red','tab:purple','tab:brown',
+    #               'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan','darkslateblue', 'gold', 'deepskyblue',
+    #               'navy', 'orangered','springgreen','deeppink','dimgrey','darggoldenrod','violet','cadetblue']
+    color_list = ['b', 'r', 'g', 'c']
     # cc = itertools.cycle(colors)
     
     for j,ax in enumerate(axs):
         #for iterate over flux_types
-        for flux_type in flux_types:
+        for c,flux_type in enumerate(flux_types):
             if flux_type == 'cpm': 
                 lc_df = lc_dict['cpm']
-            if (flux_type == 'sap_flux') or (flux_type == 'pdcsap_flux'):
-                lc_df = lc_dict['spoc_lc']
-            # create flux label
-            if flux_type == 'sap_flux': flux_label = 'SAP'
-            if flux_type == 'pdcsap_flux': flux_label = 'PDC'
-            if flux_type == 'cpm': flux_label = 'CPM'
+            elif (flux_type == 'sap_flux') | (flux_type == 'pdcsap_flux'):
+                lc_df = lc_dict['spoc']
+            else:
+                continue
+            # create flux label list
+            flux_labels = []
+            if flux_type == 'sap_flux': flux_labels.append('SAP')
+            if flux_type == 'pdcsap_flux': flux_labels.append('PDC')
+            if flux_type == 'cpm': flux_labels.append('CPM')
             # if flux_type == 'tpf':
             
             lc_df['sector'] = lc_df['sector'].to_numpy(dtype = 'str')
@@ -191,11 +194,11 @@ def plot_LCs(fig, spec, target,
                     bin_flux = bin_flux/np.nanmedian(bin_flux)
                     flux = flux/np.nanmedian(flux)
                     sector_line = ax.scatter(time,flux, s = 0.75, label = 'Sector ' + str(sector), c = color_list[i], alpha = 0.7, marker = '^')
-                    flux_line = ax.scatter(time,flux, s = 0.75, label = flux_label, c = color_list[i], alpha = 0.7, marker = '^')
+                    #flux_line = ax.scatter(time,flux, s = 0.75, label = flux_label, c = color_list[c], alpha = 0.7, marker = '^')
                     ax.plot(bin_time,bin_flux, c = 'black', linewidth = 1)#, c = c_sector[i])
                     #append lines to list for legend creation
                     sector_lines.append(sector_line)
-                    flux_lines.append(flux_line)
+                    #flux_lines.append(flux_line)
                     
                     if j == 0:
                         flux_max.append(np.percentile(a = flux, q = 98))
@@ -204,10 +207,10 @@ def plot_LCs(fig, spec, target,
                 if flux_type == 'cpm':
                     #plot cpm lightcurve
                     sector_line = ax.scatter(time,flux+1, s = 1, label = 'Sector ' + str(sector), c = color_list[i], alpha = 0.9, marker = 'o')#, c = c_sector[i])
-                    flux_line = ax.scatter(time,flux+1, s = 1, label = flux_label, c = color_list[i], alpha = 0.9, marker = 'o')
+                    #flux_line = ax.scatter(time,flux+1, s = 1, label = flux_label, c = color_list[c], alpha = 0.9, marker = 'o')
                     #plt.plot(bin_time,bin_flux, c = 'black', linewidth = 1)
                     sector_lines.append(sector_line)
-                    flux_lines.append(flux_line)                    
+                    #flux_lines.append(flux_line)                    
                 
                 # set title
                 if (j== int(round(len(sector_list)/2)) - 1) or (len(sector_list) == 1):
@@ -215,15 +218,20 @@ def plot_LCs(fig, spec, target,
                     if tmag_info is not None:
                         title = title + ', ' + tmag_info + ', ' + contratio_info
                     ax.set_title(title, loc = 'left')
-                
-        # set legends
-        if j == 0:
-            first_legend = ax.legend(handles = flux_lines, loc = 'upper left', fontsize = 'x-large', framealpha = 0.7)
-            ax.add_artist(first_legend)
-        if (j+1) == len(axs):
-            second_legend = ax.legend(handles = flux_lines, loc = 'upper right', fontsize = 'x-large', framealpha = 0.7)
-            ax.add_artist(second_legend)
-                    
+                        
+                # set legends
+                ax.legend(handles = [sector_line], loc = 'lower left')
+                # if j == 0:
+                #     first_legend = ax.legend(handles = flux_lines, loc = 'upper left', fontsize = 'x-large', framealpha = 0.7)
+                #     ax.add_artist(first_legend)
+                if (j+1) == len(axs):
+                    lines = ax.get_lines()
+                    second_legend = ax.legend(handles = lines, labels = flux_labels,
+                                              loc = 'upper right', fontsize = 'x-large', framealpha = 0.7)
+                    ax.add_artist(second_legend)
+ 
+    lc_df = lc_dict[lc_types[0]]  
+    lc_df['sector'] = lc_df['sector'].to_numpy(dtype = 'str')                
     for i,(ax,sector) in enumerate(zip(axs,sector_list)):
         temp_lc_df = lc_df[lc_df['sector'] == sector]
         if type(temp_lc_df['time'].to_numpy()[0]) == np.datetime64:  
