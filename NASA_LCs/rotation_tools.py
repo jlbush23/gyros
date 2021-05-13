@@ -318,6 +318,7 @@ def period_graph(target_name, lc_df, flux_type, LS_res, LS_periodogram, AC_res, 
     flux_max = []
     flux_min = []
     for j,ax in enumerate(axs):
+        #for lc in lc_dict
         for i,sector in enumerate(sector_list):  
             temp_lc_df = lc_df[lc_df['sector'] == sector]
             if type(temp_lc_df['time'].to_numpy()[0]) == np.datetime64:  
