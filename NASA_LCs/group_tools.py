@@ -889,10 +889,20 @@ def ff_group_run(group_toi_dict,download_dir,friends_df,ff_product_folder):
     group.add_TIC_info()
     save_group_object(group,group_fn)
     
-    #add lcs, save group with rotation_dict_collection
+    # #add lcs, save group with rotation_dict_collection
     lc_download_dir = os.path.join(download_dir,'lc_pickles')
     if os.path.exists(lc_download_dir) == False: os.mkdir(lc_download_dir)
-    group.add_tess_LCs(download_dir = lc_download_dir, lc_types = ['cpm'])
+    # group.add_tess_LCs(download_dir = lc_download_dir, lc_types = ['cpm'])
+    # save_group_object(group,group_fn)
+    
+    #add LCs externally, to update/save group object after each target
+    rots_dict_collection = bulk_download(tic_list = group.tics, 
+                                                     download_dir = lc_download_dir, 
+                                                     lc_types = ['cpm'],
+                                                     #spoc_kwrgs = spoc_kwrgs,
+                                                     group_obj = group,
+                                                     group_fn = group_fn)
+    group.rots_dict_collection = rots_dict_collection
     save_group_object(group,group_fn)
     
     # add Gaia query    
