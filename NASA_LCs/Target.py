@@ -75,23 +75,28 @@ class Target:
         
         
     def add_cpm_LC(self,bkg_subtract = False, bkg_n = 0, k=100, n=100, size = 50, l2_reg = [0.1], exclusion_size = 5, pred_pix_method = "similar_brightness", save_lc = False, keep_tesscut = False, add_poly = False, poly_scale = 2, poly_num_terms = 4):
-        cpm_obj = cpm_int(tic = self.tic)
-        cpm_obj.download_extract(bkg_subtract = bkg_subtract,
-                                 bkg_n = bkg_n,
-                                 k = k,
-                                 n = n,
-                                 size = size,
-                                 l2_reg = l2_reg,
-                                 exclusion_size = exclusion_size,
-                                 pred_pix_method = pred_pix_method,
-                                 save_lc = save_lc, 
-                                 keep_tesscut = keep_tesscut,
-                                 add_poly = add_poly,
-                                 poly_scale = poly_scale, 
-                                 poly_num_terms = poly_num_terms)
-        self.cpm_lc = cpm_obj.lc_df
-        self.median_cpm_im = cpm_obj.median_im
-        self.cpm_im_header = cpm_obj.im_header
+        # cpm_obj = cpm_int(tic = self.tic)
+        # cpm_obj.download_extract(bkg_subtract = bkg_subtract,
+        #                          bkg_n = bkg_n,
+        #                          k = k,
+        #                          n = n,
+        #                          size = size,
+        #                          l2_reg = l2_reg,
+        #                          exclusion_size = exclusion_size,
+        #                          pred_pix_method = pred_pix_method,
+        #                          save_lc = save_lc, 
+        #                          keep_tesscut = keep_tesscut,
+        #                          add_poly = add_poly,
+        #                          poly_scale = poly_scale, 
+        #                          poly_num_terms = poly_num_terms)
+        # self.cpm_lc = cpm_obj.lc_df
+        # self.median_cpm_im = cpm_obj.median_im
+        # self.cpm_im_header = cpm_obj.im_header
+        
+        self.cpm_lc, self.median_cpm_im, self.cpm_im_header = lk_int.lk_tesscut(tic = self.tic,
+                                                                                ra = self.ra,
+                                                                                dec = self.dec,
+                                                                                size = 32)
         if len(self.cpm_lc) > 0: self.available_attributes.append('cpm_lc')
         
     def check_ffi_contamination(self,srad = 15.5*20):
