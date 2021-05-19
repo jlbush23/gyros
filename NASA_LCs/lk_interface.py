@@ -15,8 +15,11 @@ import pickle as pkl
 
 from astropy.table import Table
 #from astropy.table import vstack
+from astropy.io import fits
 
-from tess_cpm.interface import cpm_interface as cpm_int
+#from tess_cpm.interface import cpm_interface as cpm_int
+
+import tess_cpm
 
 def tpf_sap(tic):
 
@@ -157,17 +160,30 @@ def lk_tesscut(tic,ra = None,dec = None,size = 32):
             continue
         #download this sector's tesscut
         lk_tesscut_obj = search_res[i].download(cutout_size = size)
-        #instantiate cpm_obj
-        cpm_obj = cpm_int(tic = tic,ra = ra,dec = dec)
-        #get cpm_lc for this sector by passing lk_tess_obj to cpm_obj
+        
+        # #instantiate cpm_obj
+        # cpm_obj = cpm_int(tic = tic,ra = ra,dec = dec)
+        
+        # #get cpm_lc for this sector by passing lk_tess_obj to cpm_obj
+        # if i == 0:
+        #     med_im_header = True
+        #     lc_df,median_im,im_header = cpm_obj.lk_cpm_lc(lk_tesscut_obj = lk_tesscut_obj,
+        #                                                   med_im_header = med_im_header)
+        # else:
+        #     med_im_header = False
+        #     lc_df = cpm_obj.lk_cpm_lc(lk_tesscut_obj = lk_tesscut_obj,
+        #                               med_im_header = med_im_header)
+        
+        #get cpm_lc for this sector by passing lk_tess_obj to lk_cpm_lc function 
         if i == 0:
             med_im_header = True
-            lc_df,median_im,im_header = cpm_obj.lk_cpm_lc(lk_tesscut_obj = lk_tesscut_obj,
-                                                          med_im_header = med_im_header)
+            lc_df,median_im,im_header = lk_cpm_lc(lk_tesscut_obj = lk_tesscut_obj,
+                                                  med_im_header = med_im_header)
         else:
             med_im_header = False
-            lc_df = cpm_obj.lk_cpm_lc(lk_tesscut_obj = lk_tesscut_obj,
-                                      med_im_header = med_im_header)
+            lk_cpm_lc(lk_tesscut_obj = lk_tesscut_obj,
+                                      med_im_header = med_im_header)        
+        
         #append to lc_holder for later concatenation
         lc_holder.append(lc_df) #store in lc_holder
         
@@ -176,6 +192,8 @@ def lk_tesscut(tic,ra = None,dec = None,size = 32):
             median_im = cpm_obj.median_im
             im_header = cpm_obj.im_header
         
+        #delete stuff
+        os.remove(path = lk_tesscut_obj.path)
         del cpm_obj
         del lk_tesscut_obj
         
@@ -186,7 +204,66 @@ def lk_tesscut(tic,ra = None,dec = None,size = 32):
         tesscut_lc = pd.concat(lc_holder) #combine lc into 1 pandas dataframe
  
     return(tesscut_lc, median_im, im_header)
- 
+
+def lk_cpm_lc(self, lk_tesscut_obj, med_im_header = False, bkg_subtract = False, bkg_n=40, k = 5, n = 35, l2_reg = [0.1], exclusion_size = 5, pred_pix_method = "similar_brightness", add_poly = False, poly_scale = 2, poly_num_terms = 4):
+    # if self.use_tic == True:
+    #     self.cpm_lc_df_fn = "tic" + str(self.tic) + "_cpm_LC.pkl"
+        
+    # if self.use_tic == False:
+    #     self.cpm_lc_df_fn = "ra" + str(self.ra) + "_dec" + str(self.dec) + "_cpm_LC.pkl"
+        
+    
+    # TESS_cuts = os.listdir(path_to_tesscuts)
+    # tesscut_fits = []
+    # for cut in TESS_cuts: 
+    #     if cut[-5:] == '.fits': tesscut_fits.append(cut)
+    # cpm_lc_df_list = []
+    
+    # for i,cut in enumerate(tesscut_fits):
+    #print(cut)
+    path = lk_tesscut_obj.path
+    sector = os.path.split(path)[1].split('-')[1][-2:]
+    
+    #temp_cut_fn = os.path.join(path_to_tesscuts,cut)
+    
+    with fits.open(path, mode="readonly") as hdu:
+        x_cen = int(math.floor(hdu[1].header["1CRPX4"]))
+        y_cen = int(math.floor(hdu[1].header["2CRPX4"]))
+        if med_im_header == True:
+            #store median image
+            self.median_im = np.nanmedian(hdu[1].data['FLUX'],axis = 0)
+            self.im_header = hdu[2].header #used for later WCS projection
+    
+    
+    temp_source = tess_cpm.Source(path, remove_bad=True, bkg_subtract = bkg_subtract, bkg_n = bkg_n)            
+    temp_source.set_aperture(rowlims=[y_cen,y_cen], collims=[x_cen, x_cen])            
+    temp_source.add_cpm_model(exclusion_size = exclusion_size, n=n, predictor_method = pred_pix_method);  
+    #_ = s.models[0][0].plot_model() #plot selected pixels 
+    if add_poly == True:
+        temp_source.add_poly_model(scale = poly_scale, num_terms = poly_num_terms); 
+        temp_source.set_regs(l2_reg)# needs to be list, like [0.01,0.1] - first in list is for cpm model, second in list is for poly model          
+    else:
+        temp_source.set_regs(l2_reg) #In the current implementation the value is the reciprocal of the prior variance (i.e., precision) on the coefficients
+    temp_source.holdout_fit_predict(k=k)            
+    time = temp_source.time            
+    flux = temp_source.get_aperture_lc(data_type="cpm_subtracted_flux")            
+    sector = np.repeat(a=sector, repeats = len(time))            
+    lc_table = Table([time,flux,sector], names = ['time','cpm','sector'])            
+    lc_df = lc_table.to_pandas()  
+    
+    del temp_source
+    
+    if med_im_header == True:
+        return(lc_df,self.median_im,self.im_header)
+    else:
+        return(lc_df)
+    # if len(cpm_lc_df_list) > 0: 
+    #     cpm_lc_df = pd.concat(cpm_lc_df_list)
+    #     self.lc_df = cpm_lc_df
+    #     return(cpm_lc_df)
+    # else:
+    #     return(pd.DataFrame())
+
 def get_lk_LCs(tic):
     #search MAST archive with tic. eventually needs to change to search_lightcurve,
     #but issues with .download_all() function from search_lightcurve
