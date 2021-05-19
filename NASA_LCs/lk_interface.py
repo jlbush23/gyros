@@ -133,6 +133,11 @@ def spoc120(tic):
         lk_lc_df['sector'] = np.repeat(a = lk_lc.sector, repeats = len(lk_lc)) #add sector label for my plotting functions
         lc_holder.append(lk_lc_df) #store in lc_holder
         
+        #delete stuff
+        fn = lk_lc.FILENAME
+        del lk_lc
+        os.remove(path = fn)
+        
     if spoc_found == False:
         print("No SPOC data found for TIC " + str(tic) + ".")
         spoc_lc = pd.DataFrame()
