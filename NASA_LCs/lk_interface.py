@@ -15,7 +15,7 @@ import pickle as pkl
 
 from astropy.table import Table
 #from astropy.table import vstack
-from astropy.io import 
+from astropy.io import fits
 
 import math
 
@@ -189,15 +189,16 @@ def lk_tesscut(tic,ra = None,dec = None,size = 32):
         #append to lc_holder for later concatenation
         lc_holder.append(lc_df) #store in lc_holder
         
-        #save median_im and im_header if i == 0
-        if i == 0:
-            median_im = cpm_obj.median_im
-            im_header = cpm_obj.im_header
+        # #save median_im and im_header if i == 0
+        # if i == 0:
+        #     median_im = cpm_obj.median_im
+        #     im_header = cpm_obj.im_header
         
         #delete stuff
-        os.remove(path = lk_tesscut_obj.path)
-        del cpm_obj
+        path = lk_tesscut_obj.path
+        #del cpm_obj
         del lk_tesscut_obj
+        os.remove(path = path)
         
     if tesscut_found == False:
         print("No TESScut data found for TIC " + str(tic) + ".")
