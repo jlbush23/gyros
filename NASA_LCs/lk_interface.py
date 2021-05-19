@@ -15,7 +15,9 @@ import pickle as pkl
 
 from astropy.table import Table
 #from astropy.table import vstack
-from astropy.io import fits
+from astropy.io import 
+
+import math
 
 #from tess_cpm.interface import cpm_interface as cpm_int
 
