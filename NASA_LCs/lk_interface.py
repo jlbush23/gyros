@@ -205,7 +205,7 @@ def lk_tesscut(tic,ra = None,dec = None,size = 32):
  
     return(tesscut_lc, median_im, im_header)
 
-def lk_cpm_lc(self, lk_tesscut_obj, med_im_header = False, bkg_subtract = False, bkg_n=40, k = 5, n = 35, l2_reg = [0.1], exclusion_size = 5, pred_pix_method = "similar_brightness", add_poly = False, poly_scale = 2, poly_num_terms = 4):
+def lk_cpm_lc(lk_tesscut_obj, med_im_header = False, bkg_subtract = False, bkg_n=40, k = 5, n = 35, l2_reg = [0.1], exclusion_size = 5, pred_pix_method = "similar_brightness", add_poly = False, poly_scale = 2, poly_num_terms = 4):
     # if self.use_tic == True:
     #     self.cpm_lc_df_fn = "tic" + str(self.tic) + "_cpm_LC.pkl"
         
@@ -231,8 +231,8 @@ def lk_cpm_lc(self, lk_tesscut_obj, med_im_header = False, bkg_subtract = False,
         y_cen = int(math.floor(hdu[1].header["2CRPX4"]))
         if med_im_header == True:
             #store median image
-            self.median_im = np.nanmedian(hdu[1].data['FLUX'],axis = 0)
-            self.im_header = hdu[2].header #used for later WCS projection
+            median_im = np.nanmedian(hdu[1].data['FLUX'],axis = 0)
+            im_header = hdu[2].header #used for later WCS projection
     
     
     temp_source = tess_cpm.Source(path, remove_bad=True, bkg_subtract = bkg_subtract, bkg_n = bkg_n)            
@@ -254,7 +254,7 @@ def lk_cpm_lc(self, lk_tesscut_obj, med_im_header = False, bkg_subtract = False,
     del temp_source
     
     if med_im_header == True:
-        return(lc_df,self.median_im,self.im_header)
+        return(lc_df,median_im,im_header)
     else:
         return(lc_df)
     # if len(cpm_lc_df_list) > 0: 
