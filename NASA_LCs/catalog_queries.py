@@ -454,6 +454,9 @@ def add_gaia_galactic_coords(gaia_query, tic = None):
         if col == 'delta_pmra': return(delta_pmra)
         if col == 'delta_pmdec': return(delta_pmdec)
         
+    def vtan(data):
+        vtan = 4.74 * np.sqrt(data['pmra']^2 + data['pmdec']^2) * (1000/data['parallax'])
+        return(vtan)        
         
     cols = ['x','y','z']
     for col in cols:
