@@ -88,8 +88,8 @@ def theia_group(group_num):
     theia_groups,theia_stars = load_theia()
     
     group_name = 'Theia ' + str(group_num)
-    group_df = theia_stars[theia_stars['theia'] == int(group_num)]
-    group_info = theia_groups[theia_groups['Theia'] == int(group_num)]
+    group_df = theia_stars[theia_stars['theia'] == int(group_num)].reset_index(drop = True)
+    group_info = theia_groups[theia_groups['Theia'] == int(group_num)].reset_index(drop = True)
     
     group = Group(name = group_name, group_df = group_df, group_info = group_info)
     
