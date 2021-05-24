@@ -95,7 +95,7 @@ def theia_group(group_num):
     
     return(group)
 
-def theia_run(group_num, group_fn, download_dir, lc_types = ['cpm'], spoc_kwrgs = None, target_catQ = True):
+def theia_run(group_num, group_fn, download_dir, lc_types = ['cpm'], group_toi_dict = None, spoc_kwrgs = None, target_catQ = True):
     #create group
     group = theia_group(group_num)
     
