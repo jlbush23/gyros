@@ -100,7 +100,7 @@ def theia_run(group_num, group_fn, download_dir, lc_types = ['cpm'], spoc_kwrgs 
     group = theia_group(group_num)
     
     # add TIC catalog info
-    if 'tic' in group_df.columns.to_numpy(dtype = 'str'):
+    if 'tic' in group.group_df.columns.to_numpy(dtype = 'str'):
         append_tics = False
         group.tics = group_df['tic'].to_numpy(dtype = 'str')
     else:
