@@ -15,10 +15,11 @@ import NASA_LCs.group_tools as gt
 import NASA_LCs.catalog_queries as catQ
 
 class Group:
-    def __init__(self,name,group_df,group_toi_dict=None):
+    def __init__(self,name,group_df,group_toi_dict=None,group_info=None):
         self.name = str(name)
         self.group_df = group_df
         self.group_toi_dict = group_toi_dict
+        self.group_info = None
         self.attributes_list = []
         
     def add_tics(self,ra_col_name = 'ra',dec_col_name = 'dec', tic_col_name = None):
