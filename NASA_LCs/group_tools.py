@@ -73,16 +73,71 @@ def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], spoc_k
     # group.save_plot_df(fn = plot_df_fn)
     # save_group_object(group,group_fn)
     
- def load_theia():
-     lit_rot_folder = os.path.join(os.path.expanduser("~"),'NASA_LCs','literature_rotations')
-     
-     theia_groups_fn = os.path.join(lit_rot_folder,'theia_groups.csv')
-     theia_stars_fn = os.path.join(lit_rot_folder,'theia_stars.csv')
-     
-     theia_groups = pd.read_csv(theia_groups_fn)
-     theia_stars = pd.read_csv(theia_stars_fn)
-     
-     return(theia_groups,theia_stars)
+def load_theia():
+    lit_rot_folder = os.path.join(os.path.expanduser("~"),'NASA_LCs','literature_rotations')
+    
+    theia_groups_fn = os.path.join(lit_rot_folder,'theia_groups.csv')
+    theia_stars_fn = os.path.join(lit_rot_folder,'theia_stars.csv')
+    
+    theia_groups = pd.read_csv(theia_groups_fn)
+    theia_stars = pd.read_csv(theia_stars_fn)
+    
+    return(theia_groups,theia_stars)
+
+def theia_group(group_num):
+    theia_groups,theia_stars = load_theia()
+    
+    group_name = 'Theia ' + str(group_num)
+    group_df = theia_stars[theia_stars['theia'] == int(group_num)]
+    group_info = theia_groups[theia_groups['Theia'] == int(group_num)]
+    
+    group = Group(name = group_name, group_df = group_df, group_info = group_info)
+    
+    return(group)
+
+def theia_run(group_num, group_fn, download_dir, lc_types = ['cpm'], spoc_kwrgs = None, target_catQ = True):
+    #create group
+    group = theia_group(group_num)
+    
+    # add TIC catalog info
+    if 'tic' in group_df.columns.to_numpy(dtype = 'str'):
+        append_tics = False
+        group.tics = group_df['tic'].to_numpy(dtype = 'str')
+    else:
+        append_tics = True
+    if target_catQ == True:
+        group.add_TIC_info(append_tics = append_tics)
+        
+    save_group_object(group,group_fn)
+    
+    #add lcs, save group with rotation_dict_collection (individual targets rotation results)
+    lc_download_dir = os.path.join(download_dir,'lc_pickles')
+    if os.path.exists(lc_download_dir) == False: os.mkdir(lc_download_dir)
+    
+    #add LCs by group method (issue with saving progress)
+    # group.add_tess_LCs(download_dir = lc_download_dir, lc_types = lc_types, spoc_kwrgs = spoc_kwrgs)
+    
+    #add LCs externally, to update/save group object after each target
+    rots_dict_collection = bulk_download(tic_list = group.tics, 
+                                                     download_dir = lc_download_dir, 
+                                                     lc_types = lc_types,
+                                                     spoc_kwrgs = spoc_kwrgs,
+                                                     group_obj = group,
+                                                     group_fn = group_fn)
+    group.rots_dict_collection = rots_dict_collection
+    save_group_object(group,group_fn)
+    
+    # add Gaia query
+    if target_catQ == True:
+        if group_toi_dict is None:    
+            group.add_gaia_info(id_col_name = 'tic',galactic_coords = True,delta_pm = False)
+        else:
+            group.add_gaia_info(id_col_name = 'tic',galactic_coords = True, delta_pm = True)
+    save_group_object(group,group_fn)
+    
+    #organize best_rots, Tmag summary
+    group.rot_summary(lc_types = lc_types, tmag_list = [14,15,16,99])
+    save_group_object(group,group_fn)
          
 
 def load_toi_catalog(augment=True):
