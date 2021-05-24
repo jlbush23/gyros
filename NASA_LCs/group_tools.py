@@ -73,7 +73,17 @@ def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], spoc_k
     # group.save_plot_df(fn = plot_df_fn)
     # save_group_object(group,group_fn)
     
-      
+ def load_theia():
+     lit_rot_folder = os.path.join(os.path.expanduser("~"),'NASA_LCs','literature_rotations')
+     
+     theia_groups_fn = os.path.join(lit_rot_folder,'theia_groups.csv')
+     theia_stars_fn = os.path.join(lit_rot_folder,'theia_stars.csv')
+     
+     theia_groups = pd.read_csv(theia_groups_fn)
+     theia_stars = pd.read_csv(theia_stars_fn)
+     
+     return(theia_groups,theia_stars)
+         
 
 def load_toi_catalog(augment=True):
     lit_rot_folder = os.path.join(os.path.expanduser("~"),'NASA_LCs','literature_rotations')
