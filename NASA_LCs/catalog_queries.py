@@ -455,8 +455,9 @@ def add_gaia_galactic_coords(gaia_query, tic = None):
         if col == 'delta_pmdec': return(delta_pmdec)
         
     def vtan(data):
-        vtan = 4.74 * np.sqrt(data['pmra']^2 + data['pmdec']^2) * (1000/data['parallax'])
-        return(vtan)        
+        vtan = 4.74 * np.sqrt(data['pmra']**2 + data['pmdec']**2) * (1000/data['parallax'])
+        vtan_km_s = vtan/1000
+        return(vtan_km_s)        
         
     cols = ['x','y','z']
     for col in cols:
@@ -465,6 +466,8 @@ def add_gaia_galactic_coords(gaia_query, tic = None):
     cols = ['u','v','w']
     for col in cols:
         gaia_query[col] = gaia_query.apply(func = uvw_cols, axis = 1, args = (col))
+        
+    gaia_query['Vtan(km/s)'] = gaia_query.apply(func = vtan, axis = 1)
     
     if tic is not None:
         cols = ['delta_pmra','delta_pmdec']
