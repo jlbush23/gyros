@@ -492,10 +492,14 @@ def period_graph(target_name, lc_df, flux_type, LS_res, LS_periodogram, AC_res, 
    
     if (flux_type == 'cpm') | (flux_type == 'fcor'):
         phase_norm_LS = (time_best_sector % best_per)/best_per #from LS method 
-        phase_norm_AC = (time_best_sector % assoc_AC_per)/assoc_AC_per #from AC
+        phase_norm_LS = phase_norm_LS.to_numpy()
+        phase_norm_AC = (time_best_sector % assoc_AC_per)/assoc_AC_per#from AC
+        phase_norm_AC = phase_norm_AC.to_numpy() 
     else:
-        phase_norm_LS = (bin_time % best_per)/best_per #from LS method        
+        phase_norm_LS = (bin_time % best_per)/best_per #from LS method  
+        #phase_norm_LS = phase_norm_LS.to_numpy()
         phase_norm_AC = (bin_time % assoc_AC_per)/assoc_AC_per #from AC
+        #phase_norm_AC = phase_norm_AC.to_numpy()
     #detect changes in phase
 
     c1 = []
