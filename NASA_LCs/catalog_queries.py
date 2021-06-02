@@ -209,7 +209,7 @@ def get_TIC_data_bulk(query_df,ra_col_name = 'ra', dec_col_name = 'dec',append_t
         if (str(row[ra_col_name]) == 'nan') | (str(row[dec_col_name]) == 'nan'):
             print("No coordinates provided for this object.")
             tics.append(np.nan)
-            TIC_dfs.append(np.nan)
+            TIC_dfs.append(pd.DataFrame())
         else:
             try:
                 temp_TIC_df, temp_tic = get_TIC_data(ra = row[ra_col_name],dec = row[dec_col_name])
@@ -218,7 +218,7 @@ def get_TIC_data_bulk(query_df,ra_col_name = 'ra', dec_col_name = 'dec',append_t
             except:
                 print("Issue getting TIC data for this object.")
                 tics.append(np.nan)
-                TIC_dfs.append(np.nan)
+                TIC_dfs.append(pd.DataFrame(data = {ra_col_name:[row[ra_col_name]],dec_col_name:[row[dec_col_name]]}))
     
     if append_tics == True: query_df.insert(loc = 0, column = 'tic', value = tics)
     TIC_query = pd.concat(TIC_dfs)
