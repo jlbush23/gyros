@@ -383,33 +383,37 @@ def get_gaia_id(ra,dec):
     radii = np.linspace(start = 0.0001, stop = 0.001, num = 19)
     #for i,row in self.df.iterrows():
     gaia_id_found = False
-    for rad in radii:
+    try:
+        for rad in radii:
+            if gaia_id_found == False:
+                query_string = str(ra) + " " + str(dec) # make sure to have a space between the strings!#SkyCoord(ra = row['ra'], dec = row['dec'], frame = 'icrs') str(row['ra']) + " " + str(row['dec']) # make sure to have a space between the strings!
+                obs_table = Catalogs.query_region(coordinates = query_string, radius = rad*u.deg, catalog = "TIC")
+                obs_df = obs_table.to_pandas()
+                if len(obs_table['ID']) == 1:
+                    gaia_id = str(obs_table['GAIA'][0])
+                    gaia_id_found = True
+                    continue
+                if len(obs_df[obs_df['GAIA'].to_numpy(dtype = 'str') != '']) == 1:
+                    temp_obs_df = obs_df[obs_df['GAIA'].to_numpy(dtype = 'str') != '']
+                    gaia_id = str(temp_obs_df['GAIA'].iloc[0])
+                    gaia_id_found = True
+                    continue
+                if len(np.unique(obs_df[obs_df['HIP'].to_numpy(dtype = 'str') != '']['HIP'])) == 1:
+                    gaia_id = str(obs_table['GAIA'][0])
+                    gaia_id_found = True
+                    continue
         if gaia_id_found == False:
-            query_string = str(ra) + " " + str(dec) # make sure to have a space between the strings!#SkyCoord(ra = row['ra'], dec = row['dec'], frame = 'icrs') str(row['ra']) + " " + str(row['dec']) # make sure to have a space between the strings!
-            obs_table = Catalogs.query_region(coordinates = query_string, radius = rad*u.deg, catalog = "TIC")
-            obs_df = obs_table.to_pandas()
-            if len(obs_table['ID']) == 1:
-                gaia_id = str(obs_table['GAIA'][0])
-                gaia_id_found = True
-                continue
-            if len(obs_df[obs_df['GAIA'].to_numpy(dtype = 'str') != '']) == 1:
-                temp_obs_df = obs_df[obs_df['GAIA'].to_numpy(dtype = 'str') != '']
-                gaia_id = str(temp_obs_df['GAIA'].iloc[0])
-                gaia_id_found = True
-                continue
-            if len(np.unique(obs_df[obs_df['HIP'].to_numpy(dtype = 'str') != '']['HIP'])) == 1:
-                gaia_id = str(obs_table['GAIA'][0])
-                gaia_id_found = True
-                continue
-    if gaia_id_found == False:
-        gaia_id = np.nan
-        print("Didn't find GAIA ID for this object.")
-    else:
-        if gaia_id == '--':
             gaia_id = np.nan
-            print("Found object, but no Gaia ID availabel through TIC.")
+            print("Didn't find GAIA ID for this object.")
         else:
-            print("Found GAIA ID " + str(gaia_id) + "!")
+            if gaia_id == '--':
+                gaia_id = np.nan
+                print("Found object, but no Gaia ID availabel through TIC.")
+            else:
+                print("Found GAIA ID " + str(gaia_id) + "!")
+    except:
+        print("Issue finding GAIA ID for this object.")
+        gaia_id = np.nan
     return(gaia_id)
 
 def get_gaia_data(ra,dec,gaia_kwrgs):
