@@ -74,16 +74,24 @@ def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], spoc_k
     # group.save_plot_df(fn = plot_df_fn)
     # save_group_object(group,group_fn)
     
-def load_theia():
+def load_theia(groups = True, stars = True):
     lit_rot_folder = os.path.join(os.path.expanduser("~"),'NASA_LCs','literature_rotations')
     
     theia_groups_fn = os.path.join(lit_rot_folder,'theia_groups.csv')
     theia_stars_fn = os.path.join(lit_rot_folder,'theia_stars.csv')
     
-    theia_groups = pd.read_csv(theia_groups_fn)
-    theia_stars = pd.read_csv(theia_stars_fn)
+    if groups: theia_groups = pd.read_csv(theia_groups_fn)
+    if stars: theia_stars = pd.read_csv(theia_stars_fn)
     
-    return(theia_groups,theia_stars)
+    if groups & stars:
+        return(theia_groups,theia_stars)
+    elif (groups == True) & (stars == False):
+        return(theia_groups)
+    elif (groups == False) & (stars == True):
+        return(theia_stars)
+    else:
+        print("At least one of 'groups' or 'stars' needs to be 'True'.")
+        return()
 
 def theia_group(group_num):
     theia_groups,theia_stars = load_theia()
@@ -293,17 +301,6 @@ def bulk_download(tic_list, download_dir, lc_types = ['spoc','cpm'],spoc_kwrgs =
             
         if 'cpm' in lc_types:
             if 'cpm_rot_dict' in target_obj.available_attributes:
-                cpm_rot_dict = target_obj.cpm_rot_dict
-                if 'rot_fig' in cpm_rot_dict.keys():
-                    del cpm_rot_dict['rot_fig']
-                cpm_rot_dict['tc_avail'] = tc_avail
-                
-                target_rots_dict['cpm'] = cpm_rot_dict
-            else:
-                target_rots_dict['cpm'] = {}
-        
-        if 'kepler' in lc_types:
-            if 'kepler_sap_rot_dict' in target_obj.available_attributes:
                 cpm_rot_dict = target_obj.cpm_rot_dict
                 if 'rot_fig' in cpm_rot_dict.keys():
                     del cpm_rot_dict['rot_fig']
