@@ -19,10 +19,11 @@ import NASA_LCs.target_tools as tt
 from tess_cpm.interface import cpm_interface as cpm_int
 
 class Target:
-    def __init__(self,tic = None, ra = None, dec = None, query_info = False):
+    def __init__(self,tic = None, ra = None, dec = None, query_info = False, kic = None):
         self.tic = tic
         self.ra = ra
         self.dec = dec
+        self.kic = kic
         self.available_attributes = []
         
         if self.tic is None:
@@ -72,6 +73,19 @@ class Target:
             spoc_lc = lk_int.spoc120(tic = self.tic)
             self.spoc_lc = spoc_lc
             self.available_attributes.append('spoc_lc')
+            
+    def add_kepler_LC(self):
+        if self.kic is None:
+            catQ.get_kic(ra = self.ra, dec = self.dec)
+            
+        if str(self.kic) != 'nan':
+            self.kepler_lc, self.kepler_avail = lk_int.kepler_prime_LC(kic = self.kic)
+            self.available_attributes.append('kepler_lc')
+            return(self.kepler_avail)
+        else:
+            self.kepler_lc = pd.DataFrame()
+            self.kepler_avail = False
+            return(self.kepler_avail)
         
         
     def add_cpm_LC(self,bkg_subtract = False, bkg_n = 0, k=100, n=100, size = 50, l2_reg = [0.1], exclusion_size = 5, pred_pix_method = "similar_brightness", save_lc = False, keep_tesscut = False, add_poly = False, poly_scale = 2, poly_num_terms = 4):
@@ -93,11 +107,14 @@ class Target:
         # self.median_cpm_im = cpm_obj.median_im
         # self.cpm_im_header = cpm_obj.im_header
         
-        self.cpm_lc, self.median_cpm_im, self.cpm_im_header = lk_int.lk_tesscut(tic = self.tic,
+        self.cpm_lc, self.median_cpm_im, self.cpm_im_header, self.tc_avail = lk_int.lk_tesscut(tic = self.tic,
                                                                                 ra = self.ra,
                                                                                 dec = self.dec,
                                                                                 size = 32)
-        if len(self.cpm_lc) > 0: self.available_attributes.append('cpm_lc')
+        if len(self.cpm_lc) > 0: 
+            self.available_attributes.append('cpm_lc')
+            
+        return(self.tc_avail)
         
     def check_ffi_contamination(self,srad = 15.5*20):
         self.gaia_contam = tt.target_contam_gaia(ra = self.ra,dec = self.dec, srad = srad)
@@ -173,15 +190,15 @@ class Target:
                     amp_df = rot_tools.amp_multi_sector(lc_df = spoc_lc, flux_type = flux)
                     
                     if flux == 'sap_flux':
-                        self.sap_rot_dict = {'LS_res':LS_res,'LS_periodogram':LS_periodogram_df,
+                        self.tess_sap_rot_dict = {'LS_res':LS_res,'LS_periodogram':LS_periodogram_df,
                                               'AC_res':AC_res,'AC_periodogram':AC_periodogram,
                                               'amp_df':amp_df}
-                        self.available_attributes.append('sap_rot_dict')
+                        self.available_attributes.append('tess_sap_rot_dict')
                     if flux == 'pdcsap_flux':
-                        self.pdc_rot_dict = {'LS_res':LS_res,'LS_periodogram':LS_periodogram_df,
+                        self.tess_pdc_rot_dict = {'LS_res':LS_res,'LS_periodogram':LS_periodogram_df,
                                               'AC_res':AC_res,'AC_periodogram':AC_periodogram,
                                               'amp_df':amp_df}
-                        self.available_attributes.append('pdc_rot_dict')
+                        self.available_attributes.append('tess_pdc_rot_dict')
                 print("Rotations added!")
             except:
                 print("Need to run 'download' function first!")
@@ -209,7 +226,40 @@ class Target:
                 print("Rotations added!")
             except:
                 self.tpf_rot_dict = {}
-                print("Need to run 'download' function first!")        
+                print("Need to run 'download' function first!")  
+                
+    def run_kepler_rots(self,min_freq = 1/50):
+        if 'kepler_lc' in self.available_attributes:
+            flux_type = ['sap_flux','pdcsap_flux']
+            flux_err_avail = True
+            keep_cols = ['time','sap_flux','sap_flux_err','pdcsap_flux','pdcsap_flux_err',
+                         'sector']
+            kepler_lc = self.kepler_lc.rename(columns = {'quarter':'sector'})[keep_cols]
+            try:
+                for flux in flux_type:
+                    LS_res,LS_periodogram_df = rot_tools.my_LS_multi_sector(lc_df = kepler_lc,
+                                                                              flux_type = flux,
+                                                                              flux_err_avail=flux_err_avail,
+                                                                              min_freq=min_freq)
+                    AC_res,AC_periodogram = rot_tools.exo_acf_multi_sector(lc_df = kepler_lc,
+                                                                                flux_type = flux,
+                                                                                flux_err_avail=flux_err_avail,
+                                                                                max_per = 1/min_freq)
+                    amp_df = rot_tools.amp_multi_sector(lc_df = kepler_lc, flux_type = flux)
+                    
+                    if flux == 'sap_flux':
+                        self.kepler_sap_rot_dict = {'LS_res':LS_res,'LS_periodogram':LS_periodogram_df,
+                                              'AC_res':AC_res,'AC_periodogram':AC_periodogram,
+                                              'amp_df':amp_df}
+                        self.available_attributes.append('kepler_sap_rot_dict')
+                    if flux == 'pdcsap_flux':
+                        self.kepler_pdc_rot_dict = {'LS_res':LS_res,'LS_periodogram':LS_periodogram_df,
+                                              'AC_res':AC_res,'AC_periodogram':AC_periodogram,
+                                              'amp_df':amp_df}
+                        self.available_attributes.append('kepler_pdc_rot_dict')
+                print("Rotations added!")
+            except:
+                print("Need to run 'download' function first!")
         
     def tpf_rot_fig(self):
         if 'tpf_rot_dict' in self.available_attributes:
@@ -226,27 +276,55 @@ class Target:
             
     def spoc_rot_fig(self):
         flux_type = ['sap_flux','pdcsap_flux']
-        if 'pdc_rot_dict' in self.available_attributes:
+        if 'tess_pdc_rot_dict' in self.available_attributes:
             for flux in flux_type:
                 if flux == 'sap_flux':
-                    LS_res = self.sap_rot_dict['LS_res']
-                    LS_periodogram = self.sap_rot_dict['LS_periodogram']
-                    AC_res = self.sap_rot_dict['AC_res']
-                    AC_periodogram = self.sap_rot_dict['AC_periodogram']
-                    self.sap_rot_fig = rot_tools.period_graph(target_name = 'TIC ' + str(self.tic),
+                    LS_res = self.tess_sap_rot_dict['LS_res']
+                    LS_periodogram = self.tess_sap_rot_dict['LS_periodogram']
+                    AC_res = self.tess_sap_rot_dict['AC_res']
+                    AC_periodogram = self.tess_sap_rot_dict['AC_periodogram']
+                    self.tess_sap_rot_fig = rot_tools.period_graph(target_name = 'TIC ' + str(self.tic),
                                                   lc_df = self.spoc_lc, flux_type = flux,
                                                   LS_res = LS_res, LS_periodogram = LS_periodogram,
                                                   AC_res = AC_res, AC_periodogram = AC_periodogram)
                 if flux == 'pdcsap_flux':
-                    LS_res = self.pdc_rot_dict['LS_res']
-                    LS_periodogram = self.pdc_rot_dict['LS_periodogram']
-                    AC_res = self.pdc_rot_dict['AC_res']
-                    AC_periodogram = self.pdc_rot_dict['AC_periodogram']
-                    self.pdc_rot_fig = rot_tools.period_graph(target_name = 'TIC ' + str(self.tic),
+                    LS_res = self.tess_pdc_rot_dict['LS_res']
+                    LS_periodogram = self.tess_pdc_rot_dict['LS_periodogram']
+                    AC_res = self.tess_pdc_rot_dict['AC_res']
+                    AC_periodogram = self.tess_pdc_rot_dict['AC_periodogram']
+                    self.tess_pdc_rot_fig = rot_tools.period_graph(target_name = 'TIC ' + str(self.tic),
                                                   lc_df = self.spoc_lc, flux_type = flux,
                                                   LS_res = LS_res, LS_periodogram = LS_periodogram,
                                                   AC_res = AC_res, AC_periodogram = AC_periodogram)
         else:
             print("Need to run_spoc_rots first!")
+            
+    def kepler_rot_fig(self):
+        flux_type = ['sap_flux','pdcsap_flux']
+        keep_cols = ['time','sap_flux','sap_flux_err','pdcsap_flux','pdcsap_flux_err',
+                     'sector']
+        kepler_lc = self.kepler_lc.rename(columns = {'quarter':'sector'})[keep_cols]
+        if 'kepler_pdc_rot_dict' in self.available_attributes:
+            for flux in flux_type:
+                if flux == 'sap_flux':
+                    LS_res = self.kepler_sap_rot_dict['LS_res']
+                    LS_periodogram = self.kepler_sap_rot_dict['LS_periodogram']
+                    AC_res = self.kepler_sap_rot_dict['AC_res']
+                    AC_periodogram = self.kepler_sap_rot_dict['AC_periodogram']
+                    self.kepler_sap_rot_fig = rot_tools.period_graph(target_name = 'KIC ' + str(self.kic),
+                                                  lc_df = kepler_lc, flux_type = flux,
+                                                  LS_res = LS_res, LS_periodogram = LS_periodogram,
+                                                  AC_res = AC_res, AC_periodogram = AC_periodogram)
+                if flux == 'pdcsap_flux':
+                    LS_res = self.kepler_pdc_rot_dict['LS_res']
+                    LS_periodogram = self.kepler_pdc_rot_dict['LS_periodogram']
+                    AC_res = self.kepler_pdc_rot_dict['AC_res']
+                    AC_periodogram = self.kepler_pdc_rot_dict['AC_periodogram']
+                    self.kepler_pdc_rot_fig = rot_tools.period_graph(target_name = 'KIC ' + str(self.kic),
+                                                  lc_df = kepler_lc, flux_type = flux,
+                                                  LS_res = LS_res, LS_periodogram = LS_periodogram,
+                                                  AC_res = AC_res, AC_periodogram = AC_periodogram)
+        else:
+            print("Need to run_kepler_rots first!")
         
         
