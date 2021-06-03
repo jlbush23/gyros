@@ -131,30 +131,34 @@ def get_tic(ra,dec):
     radii = np.linspace(start = 0.0001, stop = 0.001, num = 19)
     #for i,row in self.df.iterrows():
     tic_found = False
-    for rad in radii:
+    try:
+        for rad in radii:
+            if tic_found == False:
+                query_string = str(ra) + " " + str(dec) # make sure to have a space between the strings!#SkyCoord(ra = row['ra'], dec = row['dec'], frame = 'icrs') str(row['ra']) + " " + str(row['dec']) # make sure to have a space between the strings!
+                obs_table = Catalogs.query_region(coordinates = query_string, radius = rad*u.deg, catalog = "TIC")
+                obs_df = obs_table.to_pandas()
+                if len(obs_table['ID']) == 1:
+                    tic = obs_table['ID'][0]
+                    tic_found = True
+                    continue
+                if len(obs_df[obs_df['GAIA'].to_numpy(dtype = 'str') != '']) == 1:
+                    temp_obs_df = obs_df[obs_df['GAIA'].to_numpy(dtype = 'str') != '']
+                    tic = temp_obs_df['ID'].iloc[0]
+                    tic_found = True
+                    continue
+                if len(np.unique(obs_df[obs_df['HIP'].to_numpy(dtype = 'str') != '']['HIP'])) == 1:
+                    tic = obs_table['ID'][0]
+                    tic_found = True
+                    continue
         if tic_found == False:
-            query_string = str(ra) + " " + str(dec) # make sure to have a space between the strings!#SkyCoord(ra = row['ra'], dec = row['dec'], frame = 'icrs') str(row['ra']) + " " + str(row['dec']) # make sure to have a space between the strings!
-            obs_table = Catalogs.query_region(coordinates = query_string, radius = rad*u.deg, catalog = "TIC")
-            obs_df = obs_table.to_pandas()
-            if len(obs_table['ID']) == 1:
-                tic = obs_table['ID'][0]
-                tic_found = True
-                continue
-            if len(obs_df[obs_df['GAIA'].to_numpy(dtype = 'str') != '']) == 1:
-                temp_obs_df = obs_df[obs_df['GAIA'].to_numpy(dtype = 'str') != '']
-                tic = temp_obs_df['ID'].iloc[0]
-                tic_found = True
-                continue
-            if len(np.unique(obs_df[obs_df['HIP'].to_numpy(dtype = 'str') != '']['HIP'])) == 1:
-                tic = obs_table['ID'][0]
-                tic_found = True
-                continue
-    if tic_found == False:
+            tic = np.nan
+            print("Didn't find TIC for this object.")
+        else:
+            print("Found TIC " + str(tic) + "!")
+            #self.tic = tic
+    except:
+        print("Issue finding TIC for this object.")
         tic = np.nan
-        print("Didn't find TIC for this object.")
-    else:
-        print("Found TIC " + str(tic) + "!")
-        #self.tic = tic
     return(tic)
 
 #looks like the TIC has a KIC column... hopefully it includes the full KIC! 
