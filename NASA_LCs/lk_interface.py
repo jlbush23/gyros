@@ -153,6 +153,20 @@ def lk_tesscut(tic,ra = None,dec = None,size = 32):
     tesscut_found = False
     tesscut_first = False
     
+    try:
+        authors = search_res.table['author']
+    except:
+        tc_avail = False
+        tesscut_lc = median_im = im_header = pd.DataFrame()
+        return(tesscut_lc, median_im, im_header,tc_avail)
+        
+    if 'TESScut' in authors:
+        tc_avail = True
+    else:
+        tc_avail = False
+        tesscut_lc = median_im = im_header = pd.DataFrame()
+        return(tesscut_lc, median_im, im_header,tc_avail)
+ 
     lc_holder = []
     for i in range(len(search_res)):
         #select search result object
@@ -211,7 +225,61 @@ def lk_tesscut(tic,ra = None,dec = None,size = 32):
     else:
         tesscut_lc = pd.concat(lc_holder) #combine lc into 1 pandas dataframe
  
-    return(tesscut_lc, median_im, im_header)
+    return(tesscut_lc, median_im, im_header,tc_avail)
+
+
+def kepler_prime_LC(kic):
+    #search light curve for given KIC ID
+    search_res = lk.search_lightcurve('KIC ' + str(kic))
+    #initialize SPOC found,first found
+    lc_found = False
+    lc_first = False
+    
+    try:
+        authors = search_res.table['author']
+    except:
+        kepler_avail = False
+        kepler_lc = pd.DataFrame()
+        return(kepler_lc, kepler_avail)
+        
+    if 'Kepler' in authors:
+        kepler_avail = True
+    else:
+        kepler_avail = False
+        kepler_lc = pd.DataFrame()
+        return(kepler_lc, kepler_avail)
+    
+    lc_holder = []
+    for i in range(len(search_res)):
+        #select search result object
+        search_i = search_res[i]
+        #skip if not SPOC, 120 s exposure
+        if (search_i.author.data[0] == 'Kepler'):# & (search_i.exptime.data[0] == 120):
+            print("Found " + str(search_i.mission[0]) + " data for KIC " + str(kic) + "!")
+            lc_found = True
+            if (lc_first == False) & (lc_first is not None):
+                lc_first = True
+        else:
+            continue
+        lk_lc = search_res[i].download()
+        lk_lc = lk_lc.remove_outliers(sigma = 5.0)
+        lk_lc_df = lk_lc.to_pandas().reset_index(drop=False)
+        
+        lk_lc_df['quarter'] = np.repeat(a = lk_lc.QUARTER, repeats = len(lk_lc)) #add sector label for my plotting functions
+        lc_holder.append(lk_lc_df) #store in lc_holder
+        
+        #delete stuff
+        fn = lk_lc.FILENAME
+        del lk_lc
+        os.remove(path = fn)
+        
+    if lc_found == False:
+        print("No Kepler data found for KIC " + str(kic) + ".")
+        kepler_lc = pd.DataFrame()
+    else:
+        kepler_lc = pd.concat(lc_holder) #combine lc into 1 pandas dataframe
+        
+    return(kepler_lc,kepler_avail)
 
 def lk_cpm_lc(lk_tesscut_obj, med_im_header = False, bkg_subtract = False, bkg_n=40, k = 5, n = 35, l2_reg = [0.1], exclusion_size = 5, pred_pix_method = "similar_brightness", add_poly = False, poly_scale = 2, poly_num_terms = 4):
     # if self.use_tic == True:
