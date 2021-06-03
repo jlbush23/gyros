@@ -76,7 +76,7 @@ class Target:
             
     def add_kepler_LC(self):
         if self.kic is None:
-            catQ.get_kic(ra = self.ra, dec = self.dec)
+            self.kic = catQ.get_kic(ra = self.ra, dec = self.dec)
             
         if str(self.kic) != 'nan':
             self.kepler_lc, self.kepler_avail = lk_int.kepler_prime_LC(kic = self.kic)
