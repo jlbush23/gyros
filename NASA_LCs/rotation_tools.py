@@ -182,7 +182,7 @@ def exo_acf_multi_sector(lc_df, flux_type, flux_err_avail = False, max_per = 29)
         else:
             flux_err = None
         
-        ac_period,temp_periodogram = exo_acf(time = time, flux = flux, flux_err = flux_err, max_per = 29)
+        ac_period,temp_periodogram = exo_acf(time = time, flux = flux, flux_err = flux_err, flux_type = flux_type, max_per = 29)
         temp_result = pd.DataFrame(data = {'sector':[str(sector)],'ac_period':[ac_period]}, 
                           columns = ['sector','ac_period'])
         
@@ -198,19 +198,22 @@ def exo_acf_multi_sector(lc_df, flux_type, flux_err_avail = False, max_per = 29)
     
     return(acf_result,acf_periodograms)
         
-def exo_acf(time,flux,flux_err = None, max_per = 29): 
+def exo_acf(time,flux,flux_type, flux_err = None, max_per = 29): 
     if flux_err is not None: lc_df = pd.DataFrame(data = {'time':time,'flux':flux, 'flux_err':flux_err})    
     if flux_err is None: lc_df = pd.DataFrame(data = {'time':time,'flux':flux})
     lc_df = lc_df.dropna()
+    # lc_df = lc_df.sort_values(by = 'time',axis = 0)
+    # lc_df = lc_df.drop_duplicates(subset = ['time'])
     
     time = lc_df['time'].to_numpy(dtype = 'float')
     flux = lc_df['flux'].to_numpy(dtype = 'float')
     if flux_err is not None: flux_err = lc_df['flux_err'].to_numpy(dtype = 'float')
     
     #probably could skip all of the above and just use np.nanmean below, but whatever
-    mu = np.mean(flux)
-    flux = (flux / mu - 1)
-    if flux_err is not None: flux_err = flux_err / mu
+    if flux_type != 'cpm':
+        mu = np.mean(flux)
+        flux = (flux / mu) - 1
+        if flux_err is not None: flux_err = flux_err / mu
     
     try:
         #AC Results
