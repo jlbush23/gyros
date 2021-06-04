@@ -431,7 +431,7 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm'], spoc_kwrgs = 
                 best_tpf_rots.append(best_sector_res)
 
         if ('tess_sap' in targ_rot_dict.keys()) & ('spoc' in lc_types):
-            sap_rot_dict = targ_rot_dict['sap']
+            sap_rot_dict = targ_rot_dict['tess_sap']
             if 'LS_res' in sap_rot_dict.keys():
                 try:
                     sap_LS_res = sap_rot_dict['LS_res']
@@ -453,7 +453,7 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm'], spoc_kwrgs = 
                 best_tess_sap_rots.append(best_sector_res)
             
         if ('tess_pdc' in targ_rot_dict.keys()) & ('spoc' in lc_types):
-            pdc_rot_dict = targ_rot_dict['pdc']
+            pdc_rot_dict = targ_rot_dict['tess_pdc']
             if 'LS_res' in pdc_rot_dict.keys():
                 pdc_rot_dict = targ_rot_dict['pdc']
                 try:
@@ -496,7 +496,7 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm'], spoc_kwrgs = 
                 best_sector_res.insert(loc = 0, column = 'tic', value = str(tic))
                 best_kepler_sap_rots.append(best_sector_res)
             
-        if ('tess_pdc' in targ_rot_dict.keys()) & ('kepler' in lc_types):
+        if ('kepler_pdc' in targ_rot_dict.keys()) & ('kepler' in lc_types):
             pdc_rot_dict = targ_rot_dict['kepler_pdc']
             if 'LS_res' in pdc_rot_dict.keys():
                 pdc_rot_dict = targ_rot_dict['pdc']
