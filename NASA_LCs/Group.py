@@ -98,7 +98,7 @@ class Group:
         self.best_rots_dict = gt.best_tess_rots(rots_dict_collection = self.rots_dict_collection,
                                                 lc_types = lc_types)
         
-        ## add tmag summary for each lc_type
+        ## add tmag summary for each lc_type within kepler
         if tmag_list is not None: 
             self.tmag_summary_dict = {}
             for lc_type in lc_types:
