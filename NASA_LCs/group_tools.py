@@ -254,7 +254,7 @@ def bulk_download(tic_list, download_dir, lc_types = ['spoc','cpm'],spoc_kwrgs =
             try: 
                 tc_avail = target_obj.add_cpm_LC()
                 #target_obj.check_ffi_contamination()
-                tc_avail_df = pd.DataFrame(data = {'tic':[tic],'tc_avail':[tc_avail]})
+                tc_avail_df = pd.DataFrame(data = {'tic':[str(tic)],'tc_avail':[tc_avail]})
                 tc_avail_holder.append(tc_avail_df)
                 if (run_rotations == True) & ('cpm_lc' in target_obj.available_attributes): target_obj.run_cpm_rots(min_freq = min_freq)
             except:
@@ -264,7 +264,7 @@ def bulk_download(tic_list, download_dir, lc_types = ['spoc','cpm'],spoc_kwrgs =
             try: 
                 kepler_avail = target_obj.add_kepler_LC()
                 #target_obj.check_ffi_contamination()
-                kepler_avail_df = pd.DataFrame(data = {'tic':[tic],'kepler_avail':[kepler_avail]})
+                kepler_avail_df = pd.DataFrame(data = {'tic':[str(tic)],'kepler_avail':[kepler_avail]})
                 kepler_avail_holder.append(kepler_avail_df)
                 if (run_rotations == True) & ('kepler_lc' in target_obj.available_attributes): target_obj.run_kepler_rots(min_freq = 1/50)
             except:
