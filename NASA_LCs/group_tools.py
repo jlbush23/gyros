@@ -53,7 +53,7 @@ def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], spoc_k
                                                      spoc_kwrgs = spoc_kwrgs,
                                                      group_obj = group,
                                                      group_fn = group_fn)
-    group.group_df = group.group_df.merge(right = tc_avail_df, on = 'tic', how = 'left')
+    #group.group_df = group.group_df.merge(right = tc_avail_df, on = 'tic', how = 'left')
     group.rots_dict_collection = rots_dict_collection
     save_group_object(group,group_fn)
     
@@ -133,7 +133,7 @@ def theia_run(group_num, group_fn, download_dir, lc_types = ['cpm'], group_toi_d
                                                      spoc_kwrgs = spoc_kwrgs,
                                                      group_obj = group,
                                                      group_fn = group_fn)
-    group.group_df = group.group_df.merge(right = tc_avail_df, on = 'tic', how = 'left')
+    #group.group_df = group.group_df.merge(right = tc_avail_df, on = 'tic', how = 'left')
     group.rots_dict_collection = rots_dict_collection
     save_group_object(group,group_fn)
     
