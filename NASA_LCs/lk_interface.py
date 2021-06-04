@@ -202,7 +202,7 @@ def lk_tesscut(tic,ra = None,dec = None,size = 32):
                                                   med_im_header = med_im_header)
         else:
             med_im_header = False
-            lk_cpm_lc(lk_tesscut_obj = lk_tesscut_obj,
+            lc_df = lk_cpm_lc(lk_tesscut_obj = lk_tesscut_obj,
                                       med_im_header = med_im_header)        
         
         #append to lc_holder for later concatenation
