@@ -127,7 +127,7 @@ def theia_run(group_num, group_fn, download_dir, lc_types = ['cpm'], group_toi_d
     # group.add_tess_LCs(download_dir = lc_download_dir, lc_types = lc_types, spoc_kwrgs = spoc_kwrgs)
     
     #add LCs externally, to update/save group object after each target
-    rots_dict_collection,tc_avail_df = bulk_download(tic_list = group.tics, 
+    rots_dict_collection = bulk_download(tic_list = group.tics, 
                                                      download_dir = lc_download_dir, 
                                                      lc_types = lc_types,
                                                      spoc_kwrgs = spoc_kwrgs,
