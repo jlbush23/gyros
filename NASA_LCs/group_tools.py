@@ -33,6 +33,7 @@ def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], spoc_k
     if 'tic' in group_df.columns.to_numpy(dtype = 'str'):
         append_tics = False
         group.tics = group_df['tic'].to_numpy(dtype = 'str')
+        group.group_df['tic'] = group.group_df['tic'].to_numpy(dtype = 'str')
     else:
         append_tics = True
     if target_catQ == True:
@@ -112,6 +113,7 @@ def theia_run(group_num, group_fn, download_dir, lc_types = ['cpm'], group_toi_d
     if 'tic' in group.group_df.columns.to_numpy(dtype = 'str'):
         append_tics = False
         group.tics = group_df['tic'].to_numpy(dtype = 'str')
+        group.group_df['tic'] = group.group_df['tic'].to_numpy(dtype = 'str')
     else:
         append_tics = True
     if target_catQ == True:
