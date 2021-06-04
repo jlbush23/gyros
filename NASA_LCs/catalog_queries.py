@@ -224,7 +224,7 @@ def get_TIC_data_bulk(query_df,ra_col_name = 'ra', dec_col_name = 'dec',append_t
                 tics.append(np.nan)
                 TIC_dfs.append(pd.DataFrame(data = {ra_col_name:[row[ra_col_name]],dec_col_name:[row[dec_col_name]]}))
     
-    if append_tics == True: query_df.insert(loc = 0, column = 'tic', value = tics)
+    if append_tics == True: query_df.insert(loc = 0, column = 'tic', value = np.array(tics, dtype = 'str'))
     TIC_query = pd.concat(TIC_dfs)
     return(tics, TIC_query)#,query_df)
 
