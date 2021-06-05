@@ -501,7 +501,7 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm'], spoc_kwrgs = 
         if ('kepler_pdc' in targ_rot_dict.keys()) & ('kepler' in lc_types):
             pdc_rot_dict = targ_rot_dict['kepler_pdc']
             if 'LS_res' in pdc_rot_dict.keys():
-                pdc_rot_dict = targ_rot_dict['pdc']
+                #pdc_rot_dict = targ_rot_dict['pdc']
                 try:
                     pdc_LS_res = pdc_rot_dict['LS_res']
                 except KeyError:
