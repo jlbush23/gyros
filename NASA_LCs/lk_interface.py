@@ -146,6 +146,59 @@ def spoc120(tic):
         
     return(spoc_lc)
 
+def k2sff_LC(epic):
+    #search light curve for given KIC ID
+    search_res = lk.search_lightcurve('EPIC ' + str(epic))
+    #initialize SPOC found,first found
+    lc_found = False
+    lc_first = False
+    
+    try:
+        authors = search_res.table['author']
+    except:
+        k2sff_avail = False
+        k2sff_lc = pd.DataFrame()
+        return(k2sff_lc, k2sff_avail)
+        
+    if 'K2SFF' in authors:
+        k2sff_avail = True
+    else:
+        k2sff_avail = False
+        k2sff_lc = pd.DataFrame()
+        return(k2sff_lc, k2sff_avail)
+    
+    lc_holder = []
+    for i in range(len(search_res)):
+        #select search result object
+        search_i = search_res[i]
+        #skip if not SPOC, 120 s exposure
+        if (search_i.author.data[0] == 'K2SFF'):# & (search_i.exptime.data[0] == 120):
+            print("Found " + str(search_i.mission[0]) + " data for EPIC " + str(epic) + "!")
+            lc_found = True
+            if (lc_first == False) & (lc_first is not None):
+                lc_first = True
+        else:
+            continue
+        lk_lc = search_res[i].download()
+        lk_lc = lk_lc.remove_outliers(sigma = 5.0)
+        lk_lc_df = lk_lc.to_pandas().reset_index(drop=False)
+        
+        lk_lc_df['campaign'] = np.repeat(a = lk_lc.CAMPAIGN, repeats = len(lk_lc)) #add sector label for my plotting functions
+        lc_holder.append(lk_lc_df) #store in lc_holder
+        
+        #delete stuff
+        fn = lk_lc.FILENAME
+        del lk_lc
+        os.remove(path = fn)
+        
+    if lc_found == False:
+        print("No K2SFF data found for EPIC " + str(epic) + ".")
+        k2sff_lc = pd.DataFrame()
+    else:
+        k2sff_lc = pd.concat(lc_holder) #combine lc into 1 pandas dataframe
+        
+    return(k2sff_lc,k2sff_avail)
+
 def kepler_prime_LC(kic):
     #search light curve for given KIC ID
     search_res = lk.search_lightcurve('KIC ' + str(kic))
