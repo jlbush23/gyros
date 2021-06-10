@@ -21,6 +21,8 @@ class Group:
         self.group_toi_dict = group_toi_dict
         self.group_info = None
         self.attributes_list = []
+        self.kepler_avail_df = pd.DataFrame()
+        self.tc_avail_df = pd.DataFrame()
         
     def add_tics(self,ra_col_name = 'ra',dec_col_name = 'dec', tic_col_name = None):
         if tic_col_name is not None:
@@ -90,13 +92,14 @@ class Group:
         
         #return(target_dict)
         
-    def rot_summary(self,lc_types = ['spoc','cpm'],tmag_list = None, cont_thresh = 0.7):
+    def rot_summary(self,lc_types = ['spoc','cpm'],spoc_kwrgs = None, tmag_list = None, cont_thresh = 0.7):
         ## create best rots dict (needs updating to save memory and not rely on 
         ## target_dict. possibly can rely on a rots_target_dict)
         
         ##UPDATE: fixed to rely on rots_target_dict!!!
         self.best_rots_dict = gt.best_tess_rots(rots_dict_collection = self.rots_dict_collection,
-                                                lc_types = lc_types)
+                                                lc_types = lc_types,
+                                                spoc_kwrgs = spoc_kwrgs)
         
         ## add tmag summary for each lc_type within kepler
         if tmag_list is not None: 
