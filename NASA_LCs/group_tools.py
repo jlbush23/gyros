@@ -21,7 +21,8 @@ from NASA_LCs.Target import Target
 from NASA_LCs.Group import Group
 import NASA_LCs.catalog_queries as catQ
 
-def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], spoc_kwrgs = None, group_toi_dict = None, target_catQ = True):
+def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], 
+           spoc_kwrgs = None, group_toi_dict = None, target_catQ = True,use_tic = True,use_kic = False):
     ## run a general group given a group df with ra,dec columns    
     #create group
     if group_toi_dict is None:
@@ -40,20 +41,39 @@ def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], spoc_k
         group.add_TIC_info(append_tics = append_tics)
     save_group_object(group,group_fn)
     
+    # add KIC info
+    if 'kic' in group_df.columns.to_numpy(dtype = 'str'):
+        group.kics = group_df['kic'].to_numpy(dtype = 'str')
+    
     #add lcs, save group with rotation_dict_collection (individual targets rotation results)
+    if os.path.exists(download_dir) == False: os.mkdir(download_dir)
     lc_download_dir = os.path.join(download_dir,'lc_pickles')
     if os.path.exists(lc_download_dir) == False: os.mkdir(lc_download_dir)
     
     #add LCs by group method (issue with saving progress)
     # group.add_tess_LCs(download_dir = lc_download_dir, lc_types = lc_types, spoc_kwrgs = spoc_kwrgs)
     
+    ## determine id_list for bulk_download
+    if use_tic & use_kic:
+        print("Please decide between using TIC-ID and KIC-ID for bulk download.")
+        return()
+    if use_tic == True:
+        tic_list = group.tics 
+    else:
+        tic_list = None
+    if use_kic == True:
+        kic_list = group.kics
+    else:
+        kic_list = None
+    
     #add LCs externally, to update/save group object after each target
-    rots_dict_collection = bulk_download(tic_list = group.tics, 
-                                                     download_dir = lc_download_dir, 
-                                                     lc_types = lc_types,
-                                                     spoc_kwrgs = spoc_kwrgs,
-                                                     group_obj = group,
-                                                     group_fn = group_fn)
+    rots_dict_collection = bulk_download(tic_list = tic_list, 
+                                         kic_list = kic_list,
+                                         download_dir = lc_download_dir, 
+                                         lc_types = lc_types,
+                                         spoc_kwrgs = spoc_kwrgs,
+                                         group_obj = group,
+                                         group_fn = group_fn)
     #group.group_df = group.group_df.merge(right = tc_avail_df, on = 'tic', how = 'left')
     group.rots_dict_collection = rots_dict_collection
     save_group_object(group,group_fn)
@@ -148,7 +168,7 @@ def theia_run(group_num, group_fn, download_dir, lc_types = ['cpm'], group_toi_d
     save_group_object(group,group_fn)
     
     #organize best_rots, Tmag summary
-    group.rot_summary(lc_types = lc_types, tmag_list = [14,15,16,99])
+    group.rot_summary(lc_types = lc_types, tmag_list = [14,15,16,99], spoc_kwrgs = spoc_kwrgs)
     save_group_object(group,group_fn)
          
 
@@ -194,9 +214,20 @@ def read_group_obj(filepath):
         group_obj = pkl.load(infile)
     return(group_obj)
 
-def save_target_object(target_object, download_dir):
+def save_target_object(target_object, download_dir, id_type = None):
     #saving the file
-    target_fn = "tic" + target_object.tic + ".pkl"            
+    if id_type is not None:
+        if id_type == 'tic':
+            target_fn = "tic" + target_object.tic + ".pkl"            
+        if id_type == 'kic':
+            target_fn = "kic" + target_object.kic + ".pkl"
+    else:
+        try:
+            target_fn = "tic" + target_object.tic + ".pkl" 
+        except:
+            print("Can't save this target object, no proper ID specified.")
+            return()
+    
     target_path = os.path.join(download_dir,target_fn) 
     with open(target_path,'wb') as outfile:
         pkl.dump(target_object,outfile)      
@@ -217,21 +248,35 @@ def read_target_object(filepath):
         target_obj = pkl.load(infile)
     return(target_obj)
         
-def bulk_download(tic_list, download_dir, lc_types = ['spoc','cpm'],spoc_kwrgs = None,
+def bulk_download(tic_list, download_dir, kic_list = None, lc_types = ['spoc','cpm'],spoc_kwrgs = None,
                   run_rotations = True, min_freq = 1/30,
                   #rot_options = {'flux_type':['spoc','cpm'],'flux_err_avail':[True,False],'min_freq':1/30},
                   save_objects = True, keep_fits = False, group_obj = None, group_fn = None):
+    
+    if tic_list is not None:
+        id_list = tic_list
+        id_type = 'tic'
+    elif kic_list is not None:
+        id_list = kic_list
+        id_type = 'kic'
+    else:
+        print("Need to provide either TIC or KIC list of IDs.")
+        return()
+    
     rots_dict_collection = {}
     tc_avail_holder = []
     kepler_avail_holder = []
-    for i,tic in enumerate(tic_list):
-        print("Working on object " + str(i+1) + "/" + str(len(tic_list)) + ".")
+    for i,ID in enumerate(id_list):
+        print("Working on object " + str(i+1) + "/" + str(len(id_list)) + ".")
         #print(tic)
-        if (str(tic) == 'nan'):
+        if (str(ID) == 'nan'):
             print("No TIC for this object. Moving to next.")
             continue
         
-        target_obj = Target(tic = tic)
+        if tic_list is not None:
+            target_obj = Target(tic = ID)
+        if kic_list is not None:
+            target_obj = Target(kic = ID)
         # try spoc
         if 'spoc' in lc_types:
             #handle spoc_kwrgs
@@ -256,7 +301,7 @@ def bulk_download(tic_list, download_dir, lc_types = ['spoc','cpm'],spoc_kwrgs =
             try: 
                 tc_avail = target_obj.add_cpm_LC()
                 #target_obj.check_ffi_contamination()
-                tc_avail_df = pd.DataFrame(data = {'tic':[str(tic)],'tc_avail':[tc_avail]})
+                tc_avail_df = pd.DataFrame(data = {'tic':[str(target_obj.tic)],'tc_avail':[tc_avail]})
                 tc_avail_holder.append(tc_avail_df)
                 if (run_rotations == True) & ('cpm_lc' in target_obj.available_attributes): target_obj.run_cpm_rots(min_freq = min_freq)
             except:
@@ -266,13 +311,13 @@ def bulk_download(tic_list, download_dir, lc_types = ['spoc','cpm'],spoc_kwrgs =
             try: 
                 kepler_avail = target_obj.add_kepler_LC()
                 #target_obj.check_ffi_contamination()
-                kepler_avail_df = pd.DataFrame(data = {'tic':[str(tic)],'kepler_avail':[kepler_avail]})
+                kepler_avail_df = pd.DataFrame(data = {'tic':[str(target_obj.tic)],'kepler_avail':[kepler_avail]})
                 kepler_avail_holder.append(kepler_avail_df)
                 if (run_rotations == True) & ('kepler_lc' in target_obj.available_attributes): target_obj.run_kepler_rots(min_freq = 1/50)
             except:
                 print("Data download error or error with running Kepler rotations.")
         
-        if save_objects == True: save_target_object(target_object = target_obj, download_dir = download_dir)
+        if save_objects == True: save_target_object(target_object = target_obj, download_dir = download_dir, id_type = id_type)
         ## store rotation dicts of each object, but remove 
         target_rots_dict = {}
         if 'spoc' in lc_types:
@@ -343,10 +388,12 @@ def bulk_download(tic_list, download_dir, lc_types = ['spoc','cpm'],spoc_kwrgs =
     if group_obj is not None:
         if 'cpm' in lc_types: 
             tc_avail_res = pd.concat(tc_avail_holder)
-            group_obj.group_df = group_obj.group_df.merge(right = tc_avail_res, on = 'tic', how = 'left')
+            #group_obj.group_df = group_obj.group_df.merge(right = tc_avail_res, on = 'tic', how = 'left')
+            group.tc_avail_df = tc_avail_res
         if 'kepler' in lc_types: 
             kepler_avail_res = pd.concat(kepler_avail_holder)
-            group_obj.group_df = group_obj.group_df.merge(right = kepler_avail_res, on = 'tic', how = 'left')
+            #group_obj.group_df = group_obj.group_df.merge(right = kepler_avail_res, on = 'tic', how = 'left')
+            group.kepler_avail_df = kepler_avail_res
         if group_fn is not None: 
             save_group_object(group_obj, group_fn)
         else:
@@ -457,7 +504,7 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm'], spoc_kwrgs = 
         if ('tess_pdc' in targ_rot_dict.keys()) & ('spoc' in lc_types):
             pdc_rot_dict = targ_rot_dict['tess_pdc']
             if 'LS_res' in pdc_rot_dict.keys():
-                pdc_rot_dict = targ_rot_dict['pdc']
+                pdc_rot_dict = targ_rot_dict['tess_pdc']
                 try:
                     pdc_LS_res = pdc_rot_dict['LS_res']
                 except KeyError:
