@@ -115,6 +115,18 @@ class Target:
             self.available_attributes.append('cpm_lc')
             
         return(self.tc_avail)
+    
+    def add_cpm_multi_LC(self,tic, sectors = None, size = [32], bkg_subtract = [False], 
+                         bkg_n = [40] ,k=[5], n=[35], exclusion_size = [5], apt_size = [1],
+                         l2_reg = [[0.1]], pred_pix_method = ["cosine_similarity"], 
+                         add_poly = False, poly_scale = 2, poly_num_terms = 4):
+        
+        self.cpm_multi_lc, self.tc_avail = lk_int.cpm_multi_lk(tic = tic, sectors = sectors,
+                                                               size = size, bkg_subtract = bkg_subtract, 
+                                                               bkg_n = bkg_n, k= k, n= n, exclusion_size = exclusion_size, 
+                                                               apt_size = apt_size, l2_reg = l2_reg, 
+                                                               pred_pix_method = pred_pix_method, 
+                                                               add_poly = add_poly, poly_scale = poly_scale, poly_num_terms = poly_num_terms)
         
     def check_ffi_contamination(self,srad = 15.5*20):
         self.gaia_contam = tt.target_contam_gaia(ra = self.ra,dec = self.dec, srad = srad)
