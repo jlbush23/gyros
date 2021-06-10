@@ -146,7 +146,62 @@ def spoc120(tic):
         
     return(spoc_lc)
 
-def lk_tesscut(tic,ra = None,dec = None,size = 32):
+def kepler_prime_LC(kic):
+    #search light curve for given KIC ID
+    search_res = lk.search_lightcurve('KIC ' + str(kic))
+    #initialize SPOC found,first found
+    lc_found = False
+    lc_first = False
+    
+    try:
+        authors = search_res.table['author']
+    except:
+        kepler_avail = False
+        kepler_lc = pd.DataFrame()
+        return(kepler_lc, kepler_avail)
+        
+    if 'Kepler' in authors:
+        kepler_avail = True
+    else:
+        kepler_avail = False
+        kepler_lc = pd.DataFrame()
+        return(kepler_lc, kepler_avail)
+    
+    lc_holder = []
+    for i in range(len(search_res)):
+        #select search result object
+        search_i = search_res[i]
+        #skip if not SPOC, 120 s exposure
+        if (search_i.author.data[0] == 'Kepler'):# & (search_i.exptime.data[0] == 120):
+            print("Found " + str(search_i.mission[0]) + " data for KIC " + str(kic) + "!")
+            lc_found = True
+            if (lc_first == False) & (lc_first is not None):
+                lc_first = True
+        else:
+            continue
+        lk_lc = search_res[i].download()
+        lk_lc = lk_lc.remove_outliers(sigma = 5.0)
+        lk_lc_df = lk_lc.to_pandas().reset_index(drop=False)
+        
+        lk_lc_df['quarter'] = np.repeat(a = lk_lc.QUARTER, repeats = len(lk_lc)) #add sector label for my plotting functions
+        lc_holder.append(lk_lc_df) #store in lc_holder
+        
+        #delete stuff
+        fn = lk_lc.FILENAME
+        del lk_lc
+        os.remove(path = fn)
+        
+    if lc_found == False:
+        print("No Kepler data found for KIC " + str(kic) + ".")
+        kepler_lc = pd.DataFrame()
+    else:
+        kepler_lc = pd.concat(lc_holder) #combine lc into 1 pandas dataframe
+        
+    return(kepler_lc,kepler_avail)
+
+def lk_tesscut(tic,ra = None,dec = None,size = 32,
+               bkg_subtract = False, bkg_n=40, k = 5, n = 35, l2_reg = [0.1], exclusion_size = 5, apt_size = 1, 
+               pred_pix_method = "similar_brightness", add_poly = False, poly_scale = 2, poly_num_terms = 4):
     #search light curve for given TIC ID
     search_res = lk.search_tesscut('TIC ' + str(tic))
     #initialize SPOC found,first found
@@ -227,61 +282,104 @@ def lk_tesscut(tic,ra = None,dec = None,size = 32):
  
     return(tesscut_lc, median_im, im_header,tc_avail)
 
-
-def kepler_prime_LC(kic):
-    #search light curve for given KIC ID
-    search_res = lk.search_lightcurve('KIC ' + str(kic))
+def cpm_multi_lk(tic, sectors = None, size = [32], bkg_subtract = [False], 
+                 bkg_n = [40] ,k=[5], n=[35], exclusion_size = [5], apt_size = [1],
+                 l2_reg = [[0.1]], pred_pix_method = ["cosine_similarity"], 
+                 add_poly = False, poly_scale = 2, poly_num_terms = 4):
+    
+    #search light curve for given TIC ID
+    search_res = lk.search_tesscut('TIC ' + str(tic))
     #initialize SPOC found,first found
-    lc_found = False
-    lc_first = False
+    tesscut_found = False
+    tesscut_first = False
     
     try:
         authors = search_res.table['author']
     except:
-        kepler_avail = False
-        kepler_lc = pd.DataFrame()
-        return(kepler_lc, kepler_avail)
+        tc_avail = False
+        tesscut_lc = median_im = im_header = pd.DataFrame()
+        return(multi_lc_df, tc_avail)
         
-    if 'Kepler' in authors:
-        kepler_avail = True
+    if 'TESScut' in authors:
+        tc_avail = True
     else:
-        kepler_avail = False
-        kepler_lc = pd.DataFrame()
-        return(kepler_lc, kepler_avail)
-    
+        tc_avail = False
+        tesscut_lc = median_im = im_header = pd.DataFrame()
+        return(multi_lc_df, tc_avail)
+ 
     lc_holder = []
     for i in range(len(search_res)):
         #select search result object
         search_i = search_res[i]
-        #skip if not SPOC, 120 s exposure
-        if (search_i.author.data[0] == 'Kepler'):# & (search_i.exptime.data[0] == 120):
-            print("Found " + str(search_i.mission[0]) + " data for KIC " + str(kic) + "!")
-            lc_found = True
-            if (lc_first == False) & (lc_first is not None):
-                lc_first = True
+        #skip if not TESScut
+        if (search_i.author[0] == 'TESScut'): #& (search_i.exptime.data[0] == 120):
+            if sectors is None:
+                print("Found " + str(search_i.mission[0]) + " TESScut data for TIC " + str(tic) + "!")
+                tesscut_found = True
+                if (tesscut_first == False) & (tesscut_first is not None):
+                    tesscut_first = True
+            else:
+                table_sector = search_i.table['sequence_number'][0]
+                if (table_sector in np.array(sectors, dtype = 'int')) == False:
+                    print("Found TESScut, but not in desired sector.")
+                    continue
+                else:
+                    print("Found " + str(search_i.mission[0]) + " TESScut data for TIC " + str(tic) + "!")
+                    tesscut_found = True
+                    if (tesscut_first == False) & (tesscut_first is not None):
+                        tesscut_first = True
         else:
             continue
-        lk_lc = search_res[i].download()
-        lk_lc = lk_lc.remove_outliers(sigma = 5.0)
-        lk_lc_df = lk_lc.to_pandas().reset_index(drop=False)
+        #download this sector's tesscut, run multi extract
+        j = 0
+        for sz in size:
+            lk_tesscut_obj = search_res[i].download(cutout_size = sz)
         
-        lk_lc_df['quarter'] = np.repeat(a = lk_lc.QUARTER, repeats = len(lk_lc)) #add sector label for my plotting functions
-        lc_holder.append(lk_lc_df) #store in lc_holder
-        
-        #delete stuff
-        fn = lk_lc.FILENAME
-        del lk_lc
-        os.remove(path = fn)
-        
-    if lc_found == False:
-        print("No Kepler data found for KIC " + str(kic) + ".")
-        kepler_lc = pd.DataFrame()
-    else:
-        kepler_lc = pd.concat(lc_holder) #combine lc into 1 pandas dataframe
-        
-    return(kepler_lc,kepler_avail)
+            
+            for bkg_sub in bkg_subtract:
+                for bkg_N in bkg_n:
+                    for N in n:
+                        for exclusion in exclusion_size:
+                            for apt_s in apt_size:
+                                for choose_pix in pred_pix_method:
+                                    for K in k:
+                                        for reg in l2_reg:
+                                            temp_lc = lk_cpm_lc(lk_tesscut_obj = lk_tesscut_obj, med_im_header = False,
+                                                                      bkg_subtract = bkg_sub, bkg_n = bkg_N,
+                                                                      k=K ,n=N, exclusion_size=exclusion,apt_size = apt_s,
+                                                                      l2_reg = reg, pred_pix_method=choose_pix)
+                                            ## add cutout size to flux title!
+                                            flux_type = choose_pix[0] + '_bkg=' + str(bkg_sub)[0]
+                                            if bkg_sub: 
+                                                flux_type = flux_type + '_bkgN' + str(bkg_N)
+                                            else:
+                                                flux_type = flux_type + '_bkgNa'
+                                            flux_type = flux_type + '_s' + str(sz) + '_n' + str(N)  + '_ex' + str(exclusion) + '_apt' + str(apt_s) + '_k' + str(K) + '_l2-' + str(reg[0])
+                                            if j == 0:
+                                                multi_sector_df = temp_lc.rename(columns = {'cpm':flux_type})
+                                            if j > 0:
+                                                multi_sector_df[flux_type] = temp_lc['cpm']
+                                            j=j+1
+            #delete stuff
+            path = lk_tesscut_obj.path
+            #del cpm_obj
+            del lk_tesscut_obj
+            os.remove(path = path)                                            
+        #add multi sector df to lc holder at end of each sector extraction
+        lc_holder.append(multi_sector_df)
 
-def lk_cpm_lc(lk_tesscut_obj, med_im_header = False, bkg_subtract = False, bkg_n=40, k = 5, n = 35, l2_reg = [0.1], exclusion_size = 5, pred_pix_method = "similar_brightness", add_poly = False, poly_scale = 2, poly_num_terms = 4):
+    if tesscut_found == False:
+        print("No TESScut data found for TIC " + str(tic) + "in desired sectors.")
+        multi_lc_df = pd.DataFrame()
+    else:
+        multi_lc_df = pd.concat(lc_holder) #combine lc into 1 pandas dataframe
+    
+    return(multi_lc_df, tc_avail)
+
+def lk_cpm_lc(lk_tesscut_obj, med_im_header = False, bkg_subtract = False, 
+              bkg_n=40, k = 5, n = 35, l2_reg = [0.1], apt_size = 1,
+              exclusion_size = 5, pred_pix_method = "similar_brightness", 
+              add_poly = False, poly_scale = 2, poly_num_terms = 4):
     # if self.use_tic == True:
     #     self.cpm_lc_df_fn = "tic" + str(self.tic) + "_cpm_LC.pkl"
         
@@ -311,16 +409,23 @@ def lk_cpm_lc(lk_tesscut_obj, med_im_header = False, bkg_subtract = False, bkg_n
             im_header = hdu[2].header #used for later WCS projection
     
     
-    temp_source = tess_cpm.Source(path, remove_bad=True, bkg_subtract = bkg_subtract, bkg_n = bkg_n)            
-    temp_source.set_aperture(rowlims=[y_cen,y_cen], collims=[x_cen, x_cen])            
-    temp_source.add_cpm_model(exclusion_size = exclusion_size, n=n, predictor_method = pred_pix_method);  
-    #_ = s.models[0][0].plot_model() #plot selected pixels 
+    temp_source = tess_cpm.Source(path, remove_bad=True, bkg_subtract = bkg_subtract, bkg_n = bkg_n)  
+    if apt_size == 1:          
+        temp_source.set_aperture(rowlims=[y_cen,y_cen], collims=[x_cen, x_cen])   
+    if apt_size == 3:
+        temp_source.set_aperture(rowlims=[y_cen-1,y_cen+1], collims=[x_cen-1, x_cen+1])   
+             
+    temp_source.add_cpm_model(exclusion_size = exclusion_size, n=n, predictor_method = pred_pix_method); 
+    # temp_source.plot_cutout(l = 1, h = 99,show_aperture = True)
+    # _ = temp_source.models[0][0].plot_model() #plot selected pixels 
+    
     if add_poly == True:
         temp_source.add_poly_model(scale = poly_scale, num_terms = poly_num_terms); 
         temp_source.set_regs(l2_reg)# needs to be list, like [0.01,0.1] - first in list is for cpm model, second in list is for poly model          
     else:
         temp_source.set_regs(l2_reg) #In the current implementation the value is the reciprocal of the prior variance (i.e., precision) on the coefficients
-    temp_source.holdout_fit_predict(k=k)            
+    temp_source.holdout_fit_predict(k=k)   
+    #temp_source.models[0][0].summary_plot()         
     time = temp_source.time            
     flux = temp_source.get_aperture_lc(data_type="cpm_subtracted_flux")            
     sector = np.repeat(a=sector, repeats = len(time))            
