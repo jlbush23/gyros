@@ -113,9 +113,10 @@ class Group:
                                                                             tmag_list = tmag_list)
                 self.tmag_summary_dict[lc_type] = {'tmag_table':temp_tmag_table,
                                                    'tmag_summary':temp_tmag_summary}
+                self.attributes_list.append('tmag_summary_dict')
         
         self.attributes_list.append('best_rots_dict')
-        self.attributes_list.append('tmag_summary_dict')
+        
         
     #def add_final_rots():
         #condition on rots_summary
