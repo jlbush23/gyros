@@ -122,6 +122,19 @@ def get_epic(ra,dec):
         print("Found EPIC " + str(epic) + "!")
     return(str(epic))
 
+def get_epic_bulk(query_df,ra_col_name='ra',dec_col_name='dec'):
+    epics = []
+    for i,row in query_df.iterrows():
+        print("Finding EPIC for object " + str(i+1) + "/" + str(len(query_df)) + ".")
+        if (str(row[ra_col_name]) == 'nan') | (str(row[dec_col_name]) == 'nan'):
+            print("No coordinates provided for this object.")
+            epics.append(np.nan)
+        else:
+            epics.append(get_epic(ra = row[ra_col_name],dec = row[dec_col_name]))
+    
+    query_df.insert(loc = 0, column = 'epic', value = epics)
+    return(epics)#,query_df)
+
 
 def get_tic_bulk(query_df,ra_col_name='ra',dec_col_name='dec'):
     tics = []
@@ -172,6 +185,7 @@ def get_tic(ra,dec):
     return(tic)
 
 #looks like the TIC has a KIC column... hopefully it includes the full KIC! 
+# full KIC can be found on Vizier! catalog = 'V/133/kic'
 def get_kic_bulk(query_df,ra_col_name='ra',dec_col_name='dec'):
     kics = []
     for i,row in query_df.iterrows():
@@ -182,8 +196,8 @@ def get_kic_bulk(query_df,ra_col_name='ra',dec_col_name='dec'):
         else:
             kics.append(get_kic(ra = row[ra_col_name],dec = row[dec_col_name]))
     
-    query_df.insert(loc = 0, column = 'tic', value = tics)
-    return(tics)#,query_df)
+    query_df.insert(loc = 0, column = 'kic', value = kics)
+    return(kics)#,query_df)
   
 def get_kic(ra,dec):
     radii = np.linspace(start = 0.0001, stop = 0.001, num = 19)
