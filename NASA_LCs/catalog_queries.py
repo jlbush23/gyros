@@ -7,7 +7,7 @@ Created on Mon Aug 24 11:54:09 2020
 from astroquery.mast import Observations
 from astroquery.mast import Catalogs
 from astroquery.gaia import Gaia
-#from astroquery.vizier import Vizier
+from astroquery.vizier import Vizier
 #from astroquery.simbad import Simbad
 
 
@@ -40,6 +40,15 @@ def get_coord_from_ID(id_type, ID):
     #             return(ra,dec)
     #     except:
     #         return(np.nan,np.nan)
+    
+def get_ID_from_ID(id_type, ID, new_id_type):
+    if id_type == 'TIC':
+        query_string = 'tic ' + str(ID)
+        obs_table = Catalogs.query_object(query_string, radius = 0.002*u.deg, catalog = 'TIC')
+        obs_table = obs_table[obs_table['ID'] == str(ID)]
+        ra = obs_table['ra'][0]
+        dec = obs_table['dec'][0]
+    return(ra,dec)
     
     
 
@@ -93,24 +102,25 @@ def get_coord_from_ID(id_type, ID):
     
 
 # #the complete epic catalogue is on Vizier
-# def get_epic(self,row):
-#     radii = np.linspace(start = 0.0001, stop = 0.001, num = 19)
-#     #for i,row in self.df.iterrows():
-#     epic_found = False
-#     for rad in radii:
-#         if epic_found == False:
-#             query_string = str(row['ra']) + " " + str(row['dec']) # make sure to have a space between the strings!
-#             obs_table_list = Vizier.query_region(coordinates = query_string, radius = rad*u.deg, catalog = "EPIC");
-#             if len(obs_table_list) == 1:
-#                 epic = obs_table_list[0]['ID'][0]
-#                 epic_found = True
-#                 continue
-#     if epic_found == False:
-#         epic = np.nan
-#         print("Didn't find EPIC for this object.")
-#     else:
-#         print("Found EPIC " + str(epic) + "!")
-#     return(epic)
+def get_epic(ra,dec):
+    radii = np.linspace(start = 0.0001, stop = 0.001, num = 19)
+    #for i,row in self.df.iterrows():
+    epic_found = False
+    for rad in radii:
+        if epic_found == False:
+            query_string = str(ra) + " " + str(dec) # make sure to have a space between the strings!
+            #obs_table_list = Vizier.query_region(coordinates = query_string, radius = rad*u.deg, catalog = 'IV/34/epic')
+            obs_table = Vizier.query_region(coordinates = query_string, radius = rad*u.deg, catalog = 'IV/34/epic')[0];
+            if len(obs_table) == 1:
+                epic = obs_table_list[0]['ID'][0]
+                epic_found = True
+                continue
+    if epic_found == False:
+        epic = np.nan
+        print("Didn't find EPIC for this object.")
+    else:
+        print("Found EPIC " + str(epic) + "!")
+    return(str(epic))
 
 
 def get_tic_bulk(query_df,ra_col_name='ra',dec_col_name='dec'):
