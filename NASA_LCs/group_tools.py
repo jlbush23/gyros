@@ -413,7 +413,7 @@ def bulk_download(tic_list, download_dir, kic_list = None, epic_list = None,
             target_rots_dict['kepler_pdc'] = pdc_rot_dict
 
         
-        rots_dict_collection[id_type + str(ID)] = target_rots_dict
+        rots_dict_collection[id_type + '-' + str(ID)] = target_rots_dict
         if group_obj is not None: 
             group_obj.rots_dict_collection = rots_dict_collection
             if group_fn is not None: 
@@ -470,9 +470,10 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm'], spoc_kwrgs = 
         best_kepler_sap_rots = []
         best_kepler_pdc_rots = []
     
-    for tic in rots_dict_collection.keys():
+    for i,ID in enumerate(rots_dict_collection.keys()):
+        if i == 0: id_type = ID.split("-")[0]
         #print(tic)
-        targ_rot_dict = rots_dict_collection[tic]
+        targ_rot_dict = rots_dict_collection[ID]
         
         if ('cpm' in targ_rot_dict.keys()) & ('cpm' in lc_types):
             cpm_rot_dict = targ_rot_dict['cpm']
@@ -495,8 +496,32 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm'], spoc_kwrgs = 
                     continue 
                 
                 best_sector_res = temp_res.iloc[best_idx,:].to_frame().transpose()
-                best_sector_res.insert(loc = 0, column = 'tic', value = str(tic))
+                best_sector_res.insert(loc = 0, column = id_type, value = str(ID))
                 best_cpm_rots.append(best_sector_res)
+                
+        if ('k2sff' in targ_rot_dict.keys()) & ('k2sff' in lc_types):
+            k2sff_rot_dict = targ_rot_dict['k2sff']
+            
+            if 'LS_res' in k2sff_rot_dict.keys():
+                try:
+                    k2sff_LS_res = k2sff_rot_dict['LS_res']
+                except KeyError:
+                    print("Key Error. LS_res is empty, moving to next target.")
+                    continue 
+                
+                k2sff_AC_res = k2sff_rot_dict['AC_res']
+                
+                temp_res = k2sff_LS_res.merge(right = k2sff_AC_res, on = 'sector', how = 'outer')
+                try:
+                    best_idx = np.where(np.max(temp_res['LS_Power1']) == temp_res['LS_Power1'])[0][0]
+                except IndexError:
+                    print("Can't index it because it has no length. No period returned.")
+                    print("Moving to next target.")
+                    continue 
+                
+                best_sector_res = temp_res.iloc[best_idx,:].to_frame().transpose()
+                best_sector_res.insert(loc = 0, column = id_type, value = str(ID))
+                best_k2sff_rots.append(best_sector_res)
                 
         if ('tpf' in targ_rot_dict.keys()) & ('spoc' in lc_types):
             tpf_rot_dict = targ_rot_dict['tpf']
@@ -518,7 +543,7 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm'], spoc_kwrgs = 
                     continue 
                 
                 best_sector_res = temp_res.iloc[best_idx,:].to_frame().transpose()
-                best_sector_res.insert(loc = 0, column = 'tic', value = str(tic))
+                best_sector_res.insert(loc = 0, column = id_type, value = str(ID))
                 best_tpf_rots.append(best_sector_res)
 
         if ('tess_sap' in targ_rot_dict.keys()) & ('spoc' in lc_types):
@@ -540,7 +565,7 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm'], spoc_kwrgs = 
                     print("Moving to next target.")
                     continue 
                 best_sector_res = temp_res.iloc[best_idx,:].to_frame().transpose()
-                best_sector_res.insert(loc = 0, column = 'tic', value = str(tic))
+                best_sector_res.insert(loc = 0, column = id_type, value = str(ID))
                 best_tess_sap_rots.append(best_sector_res)
             
         if ('tess_pdc' in targ_rot_dict.keys()) & ('spoc' in lc_types):
@@ -562,7 +587,7 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm'], spoc_kwrgs = 
                     print("Moving to next target.")
                     continue
                 best_sector_res = temp_res.iloc[best_idx,:].to_frame().transpose()
-                best_sector_res.insert(loc = 0, column = 'tic', value = str(tic))
+                best_sector_res.insert(loc = 0, column = id_type, value = str(ID))
                 best_tess_pdc_rots.append(best_sector_res) 
                 
         if ('kepler_sap' in targ_rot_dict.keys()) & ('kepler' in lc_types):
@@ -584,7 +609,7 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm'], spoc_kwrgs = 
                     print("Moving to next target.")
                     continue 
                 best_sector_res = temp_res.iloc[best_idx,:].to_frame().transpose()
-                best_sector_res.insert(loc = 0, column = 'tic', value = str(tic))
+                best_sector_res.insert(loc = 0, column = id_type, value = str(ID))
                 best_kepler_sap_rots.append(best_sector_res)
             
         if ('kepler_pdc' in targ_rot_dict.keys()) & ('kepler' in lc_types):
@@ -606,7 +631,7 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm'], spoc_kwrgs = 
                     print("Moving to next target.")
                     continue
                 best_sector_res = temp_res.iloc[best_idx,:].to_frame().transpose()
-                best_sector_res.insert(loc = 0, column = 'tic', value = str(tic))
+                best_sector_res.insert(loc = 0, column = id_type, value = str(ID))
                 best_kepler_pdc_rots.append(best_sector_res)
     
     #augment best rots df's with perc_err, matches, and aliases
@@ -628,6 +653,24 @@ def best_tess_rots(rots_dict_collection,lc_types = ['spoc','cpm'], spoc_kwrgs = 
         best_cpm_rots_df['rot_avail'] = best_cpm_rots_df['perc_err_match'] | best_cpm_rots_df['alias']
         
         best_rots_dict['cpm'] = best_cpm_rots_df
+        
+    if 'cpm' in lc_types: 
+        best_k2sff_rots_df = pd.concat(best_k2sff_rots)
+        best_k2sff_rots_df['perc_err'] = np.divide(best_k2sff_rots_df['LS_Per1'],best_k2sff_rots_df['ac_period'])
+        best_k2sff_rots_df['perc_err_match'] = (best_k2sff_rots_df['perc_err'] < 1.1) & (best_k2sff_rots_df['perc_err'] > 0.9)
+        best_k2sff_rots_df['alias'] = ((best_k2sff_rots_df['perc_err'] < 0.55) & (best_k2sff_rots_df['perc_err'] > 0.45)) | ((best_k2sff_rots_df['perc_err'] < 2.05) & (best_k2sff_rots_df['perc_err'] > 1.95))
+        alias_type = []
+        for i,row in best_k2sff_rots_df.iterrows():
+            if ((row['perc_err'] < 0.56) & (row['perc_err'] > 0.44)): 
+                alias_type.append("0.5x")
+            elif ((row['perc_err'] < 2.06) & (row['perc_err'] > 1.94)): 
+                alias_type.append("2x")
+            else:
+                alias_type.append(np.nan)
+        best_k2sff_rots_df['alias_type'] = alias_type
+        best_k2sff_rots_df['rot_avail'] = best_k2sff_rots_df['perc_err_match'] | best_k2sff_rots_df['alias']
+        
+        best_rots_dict['k2sff'] = best_k2sff_rots_df
         
     if 'spoc' in lc_types: 
         if tpf_lc == True:
