@@ -58,7 +58,7 @@ def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'],
         if 'epic' in group_df.columns.to_numpy(dtype = 'str'):
             group.epics = group_df['epic'].to_numpy(dtype = 'str')
         else:
-            gorup.epics = catQ.get_epic_bulk(query_df = group.group_df)
+            group.epics = catQ.get_epic_bulk(query_df = group.group_df)
         epic_list = group.epics 
     else:
         epic_list = None
