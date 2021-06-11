@@ -23,6 +23,7 @@ class Group:
         self.attributes_list = []
         self.kepler_avail_df = pd.DataFrame()
         self.tc_avail_df = pd.DataFrame()
+        self.k2sff_avail_df = pd.DataFrame()
         
     def add_tics(self,ra_col_name = 'ra',dec_col_name = 'dec', tic_col_name = None):
         if tic_col_name is not None:
