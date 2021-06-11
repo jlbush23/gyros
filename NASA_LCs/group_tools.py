@@ -22,7 +22,8 @@ from NASA_LCs.Group import Group
 import NASA_LCs.catalog_queries as catQ
 
 def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], 
-           spoc_kwrgs = None, group_toi_dict = None, target_catQ = True,use_tic = True,use_kic = False,use_epic = False):
+           spoc_kwrgs = None, group_toi_dict = None, target_catQ = True,use_tic = True,use_kic = False,use_epic = False,
+           tmag_list = None):
     ## run a general group given a group df with ra,dec columns    
     #create group
     if group_toi_dict is None:
@@ -96,7 +97,7 @@ def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'],
     save_group_object(group,group_fn)
     
     #organize best_rots, Tmag summary
-    group.rot_summary(lc_types = lc_types, tmag_list = [14,15,16,99])
+    group.rot_summary(lc_types = lc_types, tmag_list = tmag_list)
     save_group_object(group,group_fn)
     
     # #save plotting results
