@@ -230,6 +230,8 @@ def save_target_object(target_object, download_dir, id_type = None):
             target_fn = "tic" + target_object.tic + ".pkl"            
         if id_type == 'kic':
             target_fn = "kic" + target_object.kic + ".pkl"
+        if id_type == 'epic':
+            target_fn = "epic" + target_object.epic + ".pkl"
     else:
         try:
             target_fn = "tic" + target_object.tic + ".pkl" 
