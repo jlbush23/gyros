@@ -389,11 +389,11 @@ def bulk_download(tic_list, download_dir, kic_list = None, lc_types = ['spoc','c
         if 'cpm' in lc_types: 
             tc_avail_res = pd.concat(tc_avail_holder)
             #group_obj.group_df = group_obj.group_df.merge(right = tc_avail_res, on = 'tic', how = 'left')
-            group.tc_avail_df = tc_avail_res
+            group_obj.tc_avail_df = tc_avail_res
         if 'kepler' in lc_types: 
             kepler_avail_res = pd.concat(kepler_avail_holder)
             #group_obj.group_df = group_obj.group_df.merge(right = kepler_avail_res, on = 'tic', how = 'left')
-            group.kepler_avail_df = kepler_avail_res
+            group_obj.kepler_avail_df = kepler_avail_res
         if group_fn is not None: 
             save_group_object(group_obj, group_fn)
         else:
