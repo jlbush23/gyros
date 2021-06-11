@@ -19,11 +19,12 @@ import NASA_LCs.target_tools as tt
 from tess_cpm.interface import cpm_interface as cpm_int
 
 class Target:
-    def __init__(self,tic = None, ra = None, dec = None, query_info = False, kic = None):
+    def __init__(self,tic = None, ra = None, dec = None, query_info = False, kic = None, epic = None):
         self.tic = tic
         self.ra = ra
         self.dec = dec
         self.kic = kic
+        self.epic = epic
         self.available_attributes = []
         
         if self.tic is None:
@@ -55,7 +56,7 @@ class Target:
         self.available_attributes.append('target_df')
         
         
-    def add_spoc_LCs(self,tpf = True,lk_lc=True):
+    def add_spoc_LCs(self,tpf = False,lk_lc=True):
         # self.all_LCs, self.spoc120_lc, self.lk_search_table = lk_int.get_lk_LCs(tic = self.tic)
         # if len(self.spoc120_lc) > 0: self.available_attributes.append('spoc120_lc')
         # if len(self.all_LCs) > 0: self.available_attributes.append('all_LCs')
@@ -115,6 +116,20 @@ class Target:
             self.available_attributes.append('cpm_lc')
             
         return(self.tc_avail)
+    
+    def add_k2sff_LC(self):
+        if self.epic is None:
+            self.epic = catQ.get_epic(ra = self.ra, dec = self.dec)
+            
+        if str(self.epic) != 'nan':
+            self.k2sff_lc, self.k2sff_avail = lk_int.k2sff_LC(epic = self.epic)
+            self.available_attributes.append('k2sff_lc')
+            return(self.k2sff_avail)
+        else:
+            self.k2sff_lc = pd.DataFrame()
+            self.k2sff_avail = False
+            return(self.k2sff_avail)
+        
     
     def add_cpm_multi_LC(self,tic, sectors = None, size = [32], bkg_subtract = [False], 
                          bkg_n = [40] ,k=[5], n=[35], exclusion_size = [5], apt_size = [1],
@@ -181,6 +196,52 @@ class Target:
                                           AC_res = AC_res, AC_periodogram = AC_periodogram)
         else:
             print("Need to run_cpm_rots first!")
+            
+    def run_k2sff_rots(self,min_freq = 1/50):
+        if 'k2sff_lc' in self.available_attributes:
+            flux_type = ['flux']
+            keep_cols = ['time','flux','sector']
+            k2sff_lc = self.k2sff_lc.rename(columns = {'campaign':'sector'})[keep_cols]
+            flux_err_avail = False
+            try:
+                for flux in flux_type:
+                    LS_res,LS_periodogram_df = rot_tools.my_LS_multi_sector(lc_df = k2sff_lc,
+                                                                              flux_type = flux,
+                                                                              flux_err_avail=flux_err_avail,
+                                                                              min_freq=min_freq)
+                    AC_res,AC_periodogram = rot_tools.exo_acf_multi_sector(lc_df = k2sff_lc,
+                                                                                flux_type = flux,
+                                                                                flux_err_avail=flux_err_avail,
+                                                                                max_per = 1/min_freq)
+                    amp_df = rot_tools.amp_multi_sector(lc_df = k2sff_lc, flux_type = flux)
+                
+                    if flux == 'flux':
+                        self.k2sff_rot_dict = {'LS_res':LS_res,'LS_periodogram':LS_periodogram_df,
+                                             'AC_res':AC_res,'AC_periodogram':AC_periodogram,
+                                             'amp_df':amp_df}
+                        self.available_attributes.append('k2sff_rot_dict')
+                print("Rotations added!")
+            except:
+                self.k2sff_rot_dict = {}
+                print("Need to run 'download' function first!")
+        else: 
+            self.k2sff_rot_dict = {}
+            print("Need to run 'download' function first!")
+    
+    def k2sff_rot_fig(self):
+        if 'k2sff_rot_dict' in self.available_attributes:
+            keep_cols = ['time','flux','sector']
+            k2sff_lc = self.k2sff_lc.rename(columns = {'campaign':'sector'})[keep_cols]
+            LS_res = self.k2sff_rot_dict['LS_res']
+            LS_periodogram = self.k2sff_rot_dict['LS_periodogram']
+            AC_res = self.k2sff_rot_dict['AC_res']
+            AC_periodogram = self.k2sff_rot_dict['AC_periodogram']
+            self.k2sff_rot_fig = rot_tools.period_graph(target_name = 'EPIC ' + str(self.epic),
+                                          lc_df = k2sff_lc, flux_type = 'flux',
+                                          LS_res = LS_res, LS_periodogram = LS_periodogram,
+                                          AC_res = AC_res, AC_periodogram = AC_periodogram)
+        else:
+            print("Need to run_k2sff_rots first!")
 
     def run_spoc_rots(self,min_freq = 1/30):
         if 'spoc_lc' in self.available_attributes:
