@@ -257,7 +257,7 @@ def read_target_object(filepath):
         target_obj = pkl.load(infile)
     return(target_obj)
         
-def bulk_download(tic_list, download_dir, kic_list = None, epic_lsit = None, 
+def bulk_download(tic_list, download_dir, kic_list = None, epic_list = None, 
                   lc_types = ['spoc','cpm'],spoc_kwrgs = None,
                   run_rotations = True, min_freq = 1/30,
                   #rot_options = {'flux_type':['spoc','cpm'],'flux_err_avail':[True,False],'min_freq':1/30},
