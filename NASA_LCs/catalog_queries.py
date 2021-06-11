@@ -108,13 +108,17 @@ def get_epic(ra,dec):
     epic_found = False
     for rad in radii:
         if epic_found == False:
-            query_string = str(ra) + " " + str(dec) # make sure to have a space between the strings!
+            #query_string = str(ra) + " " + str(dec) # make sure to have a space between the strings!
+            coord = SkyCoord(ra=ra, dec=dec,unit=(u.deg, u.deg),frame='icrs')
             #obs_table_list = Vizier.query_region(coordinates = query_string, radius = rad*u.deg, catalog = 'IV/34/epic')
-            obs_table = Vizier.query_region(coordinates = query_string, radius = rad*u.deg, catalog = 'IV/34/epic')[0];
-            if len(obs_table) == 1:
-                epic = obs_table_list[0]['ID'][0]
-                epic_found = True
-                continue
+            try:
+                obs_table = Vizier.query_region(coordinates = coord, radius = rad*u.deg, catalog = 'IV/34/epic')[0];
+                if len(obs_table) == 1:
+                    epic = obs_table['ID'][0]
+                    epic_found = True
+                    continue
+            except:
+                epic_found = False
     if epic_found == False:
         epic = np.nan
         print("Didn't find EPIC for this object.")
