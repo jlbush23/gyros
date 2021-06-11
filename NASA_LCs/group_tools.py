@@ -291,7 +291,7 @@ def bulk_download(tic_list, download_dir, kic_list = None, epic_list = None,
             target_obj = Target(tic = ID)
         if kic_list is not None:
             target_obj = Target(kic = ID)
-        if epic_lsit is not None:
+        if epic_list is not None:
             target_obj = Target(epic = ID)
         # try spoc
         if 'spoc' in lc_types:
