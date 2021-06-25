@@ -19,13 +19,16 @@ import NASA_LCs.target_tools as tt
 from tess_cpm.interface import cpm_interface as cpm_int
 
 class Target:
-    def __init__(self,tic = None, ra = None, dec = None, query_info = False, kic = None, epic = None):
+    def __init__(self,tic = None, ra = None, dec = None, query_info = False, kic = None, epic = None,
+                 sap_rot = None, sap_amp = None):
         self.tic = tic
         self.ra = ra
         self.dec = dec
         self.kic = kic
         self.epic = epic
         self.available_attributes = []
+        self.sap_rot = sap_rot
+        self.sap_amp = sap_amp
         
         if self.tic is None:
             if (self.ra is not None) & (self.dec is not None):
@@ -131,18 +134,47 @@ class Target:
             return(self.k2sff_avail)
         
     
-    def add_cpm_multi_LC(self,tic, sectors = None, size = [32], bkg_subtract = [False], 
+    def add_cpm_multi_LC(self,sectors = None, size = [32], bkg_subtract = [False], 
                          bkg_n = [40] ,k=[5], n=[35], exclusion_size = [5], apt_size = [1],
                          l2_reg = [[0.1]], pred_pix_method = ["cosine_similarity"], 
-                         add_poly = False, poly_scale = 2, poly_num_terms = 4):
+                         add_poly = False, poly_scale = 2, poly_num_terms = 4, median_im_header = False):
         
-        self.cpm_multi_lc, self.tc_avail = lk_int.cpm_multi_lk(tic = tic, sectors = sectors,
+        self.cpm_multi_lc, self.tc_avail = lk_int.cpm_multi_lk(tic = self.tic, sectors = sectors,med_im_header = median_im_header,
                                                                size = size, bkg_subtract = bkg_subtract, 
                                                                bkg_n = bkg_n, k= k, n= n, exclusion_size = exclusion_size, 
                                                                apt_size = apt_size, l2_reg = l2_reg, 
                                                                pred_pix_method = pred_pix_method, 
                                                                add_poly = add_poly, poly_scale = poly_scale, poly_num_terms = poly_num_terms)
+    
+    def run_cpm_multi_rots(self):
+        flux_list = self.cpm_multi_lc.drop(columns = ['time','sector']).columns.to_numpy(dtype = 'str')
+    
+        res_df = pd.DataFrame(columns = ['extract_method','cpm_per','cpm_power',
+                                           'cpm_ac_per','cpm_amp'])
+    
+        for flux in flux_list:
+            LS_res,_ = rot_tools.my_LS(time = self.cpm_multi_lc['time'].to_numpy(),flux = self.cpm_multi_lc[flux].to_numpy())
+            ac_per,_ = rot_tools.exo_acf(time = self.cpm_multi_lc['time'].to_numpy(),flux = self.cpm_multi_lc[flux].to_numpy(),flux_type = 'cpm')
+            amp = rot_tools.measure_amp(self.cpm_multi_lc[flux].to_numpy())
+            temp_df = pd.DataFrame(data = {'extract_method':[flux],'cpm_per':[LS_res['LS_Per1'][0]],
+                                           'cpm_power':[LS_res['LS_Power1'][0]],'cpm_ac_per':[ac_per],
+                                           'cpm_amp':[amp]})
+            res_df = pd.concat([res_df,temp_df])
         
+        
+        sap_rot = self.sap_rot
+        sap_amp = self.sap_amp
+        
+        res_df['ls_ac_div'] = np.divide(res_df['cpm_per'],res_df['cpm_ac_per'])
+        res_df['cpm-ls_sap_rot_err'] = np.abs(res_df['cpm_per'] - sap_rot)/sap_rot
+        res_df['cpm-ac_sap_rot_err'] = np.abs(res_df['cpm_ac_per'] - sap_rot)/sap_rot
+        res_df['cpm-ls_div_sap'] = res_df['cpm_per']/sap_rot
+        res_df['cpm-ac_div_sap'] = res_df['cpm_ac_per']/sap_rot
+        res_df['cpm_div_sap_amp'] = res_df['cpm_amp']/sap_amp
+        res_df['cpm_sap_amp_err'] = np.abs(res_df['cpm_amp'] - sap_amp)/sap_amp
+        
+        self.cpm_multi_rot_res = res_df
+    
     def check_ffi_contamination(self,srad = 15.5*20):
         self.gaia_contam = tt.target_contam_gaia(ra = self.ra,dec = self.dec, srad = srad)
          
