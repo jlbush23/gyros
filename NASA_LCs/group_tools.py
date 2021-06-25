@@ -181,7 +181,13 @@ def theia_run(group_num, group_fn, download_dir, lc_types = ['cpm'], group_toi_d
     group.rot_summary(lc_types = lc_types, tmag_list = [14,15,16,99], spoc_kwrgs = spoc_kwrgs)
     save_group_object(group,group_fn)
          
-
+def mamajek_colors():
+    lit_rot_folder = os.path.join(os.path.expanduser("~"),'NASA_LCs','literature_rotations')
+    colors_fn = os.path.join(lit_rot_folder,'mamajek_color_idx.txt')
+    
+    colors_df = pd.read_csv(colors_fn, delim_whitespace = True)
+    return(colors_df)
+    
 def load_toi_catalog(augment=True):
     lit_rot_folder = os.path.join(os.path.expanduser("~"),'NASA_LCs','literature_rotations')
     toi_cat_fn = os.path.join(lit_rot_folder,'csv-file-toi-catalog.csv')

@@ -16,10 +16,117 @@ import exoplanet as xo
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+mpl.rcParams['font.sans-serif'] = "DejaVu Sans"
+mpl.rcParams['font.family'] = "sans-serif"
+mpl.rcParams['text.usetex'] = False
 import matplotlib.gridspec as gridspec
 
 from scipy.stats import binned_statistic as bin_stat
 
+from gatspy import periodic
+
+import starspot as ss
+
+def ss_rots_multi_sector(lc_df, flux_type, flux_err_avail= False,
+                         min_per = 0.1, max_per = 29):
+    
+    sector_list = np.unique(lc_df['sector'].to_numpy())
+    
+    result_list = []
+    
+    for sector in sector_list:
+        temp_lc_df = lc_df[lc_df['sector'] == sector]
+        temp_lc_df = temp_lc_df.dropna(subset = ['time',flux_type])
+        if len(temp_lc_df) == 0: continue
+        
+        if type(temp_lc_df['time'].to_numpy()[0]) == np.datetime64:  
+            time = Time(temp_lc_df['time']).jd
+        else:
+            time = temp_lc_df['time'].to_numpy(dtype = 'float')
+        flux = temp_lc_df[flux_type].to_numpy(dtype = 'float')
+        if flux_err_avail == True:
+            flux_err = temp_lc_df[flux_type + '_err'].to_numpy(dtype = 'float')
+        else:
+            flux_err = None
+        
+        ss_ls, ss_acf = starspot_rots(time = time, flux = flux, flux_err = flux_err, 
+                                      flux_type = flux_type, min_per = min_per, max_per = max_per)
+        temp_result = pd.DataFrame(data = {'sector':[str(sector)],'ss_ls':[ss_ls],'ss_acf':[ss_acf]}, 
+                                   columns = ['sector','ss_ls','ss_acf'])
+        
+        # temp_sector = np.repeat(a=str(sector),repeats = len(temp_periodogram))
+        # temp_periodogram['sector'] = temp_sector
+        
+        # acf_periodograms[sector] = temp_periodogram
+        result_list.append(temp_result)
+        
+    ss_result = pd.concat(result_list)
+    #id_repeats = np.repeat(self.id_num, len(acf_result))
+    #acf_result.insert(loc = 0, column = id_label, value = id_repeats)
+    
+    return(ss_result)#,acf_periodograms)    
+
+def starspot_rots(time,flux,flux_err=None,flux_type = None, min_per=0.1,max_per=30):
+    
+    rotate = ss.RotationModel(time,flux,flux_err = flux_err)
+
+    # Calculate the Lomb Scargle periodogram period (highest peak in the periodogram).
+    lomb_scargle_period = rotate.ls_rotation(min_period = min_per,max_period=max_per)
+    
+    # Calculate the autocorrelation function (ACF) period (highest peak in the ACF).
+    # This is for evenly sampled data only -- time between observations is 'interval'.
+    acf_period = rotate.acf_rotation(interval=np.diff(time)[0])
+    
+    return(lomb_scargle_period,acf_period)
+
+def gatspy_LS_multi_sector(lc_df, flux_type, flux_err_avail = False, 
+                           min_per = 0.1, max_per = 29):
+    
+    sector_list = np.unique(lc_df['sector'].to_numpy())
+    
+    result_list = []
+    
+    for sector in sector_list:
+        temp_lc_df = lc_df[lc_df['sector'] == sector]
+        temp_lc_df = temp_lc_df.dropna(subset = ['time',flux_type])
+        if len(temp_lc_df) == 0: continue
+        
+        if type(temp_lc_df['time'].to_numpy()[0]) == np.datetime64:  
+            time = Time(temp_lc_df['time']).jd
+        else:
+            time = temp_lc_df['time'].to_numpy(dtype = 'float')
+        flux = temp_lc_df[flux_type].to_numpy(dtype = 'float')
+        if flux_err_avail == True:
+            flux_err = temp_lc_df[flux_type + '_err'].to_numpy(dtype = 'float')
+        else:
+            flux_err = None
+        
+        gatspy_period = gatspy_LS(time = time, flux = flux, flux_err = flux_err, 
+                                  flux_type = flux_type, min_per = min_per, max_per = max_per)
+        temp_result = pd.DataFrame(data = {'sector':[str(sector)],'gatspy_per':[gatspy_period]}, 
+                                   columns = ['sector','gatspy_per'])
+        
+        # temp_sector = np.repeat(a=str(sector),repeats = len(temp_periodogram))
+        # temp_periodogram['sector'] = temp_sector
+        
+        # acf_periodograms[sector] = temp_periodogram
+        result_list.append(temp_result)
+        
+    gatspy_result = pd.concat(result_list)
+    #id_repeats = np.repeat(self.id_num, len(acf_result))
+    #acf_result.insert(loc = 0, column = id_label, value = id_repeats)
+    
+    return(gatspy_result)#,acf_periodograms)
+
+def gatspy_LS(time,flux,flux_type,flux_err = None, min_per = 0.1, max_per = 30):
+    
+    model = periodic.LombScargleFast(fit_period=True,center_data = False)
+    model.optimizer.period_range = (min_per, max_per)
+    model.fit(time, flux)
+
+    rot = model.best_period;
+    
+    return rot
 
 def my_LS_multi_sector(lc_df,flux_type,flux_err_avail = True, min_freq = 1/30):
     periodogram_list = []
@@ -29,7 +136,7 @@ def my_LS_multi_sector(lc_df,flux_type,flux_err_avail = True, min_freq = 1/30):
     
     for sector in sector_list:
         temp_lc_df = lc_df[lc_df['sector'] == sector]
-        temp_lc_df = temp_lc_df.dropna()
+        temp_lc_df = temp_lc_df.dropna(subset = ['time',flux_type])
         if len(temp_lc_df) == 0: continue
     
         if type(temp_lc_df['time'].to_numpy()[0]) == np.datetime64:  
@@ -169,7 +276,7 @@ def exo_acf_multi_sector(lc_df, flux_type, flux_err_avail = False, max_per = 29)
     
     for sector in sector_list:
         temp_lc_df = lc_df[lc_df['sector'] == sector]
-        temp_lc_df = temp_lc_df.dropna()
+        temp_lc_df = temp_lc_df.dropna(subset = ['time',flux_type])
         if len(temp_lc_df) == 0: continue
         
         if type(temp_lc_df['time'].to_numpy()[0]) == np.datetime64:  
@@ -182,7 +289,8 @@ def exo_acf_multi_sector(lc_df, flux_type, flux_err_avail = False, max_per = 29)
         else:
             flux_err = None
         
-        ac_period,temp_periodogram = exo_acf(time = time, flux = flux, flux_err = flux_err, flux_type = flux_type, max_per = 29)
+        ac_period,temp_periodogram = exo_acf(time = time, flux = flux, flux_err = flux_err, 
+                                             flux_type = flux_type, max_per = max_per)
         temp_result = pd.DataFrame(data = {'sector':[str(sector)],'ac_period':[ac_period]}, 
                           columns = ['sector','ac_period'])
         
@@ -214,6 +322,8 @@ def exo_acf(time,flux,flux_type, flux_err = None, max_per = 29):
         mu = np.mean(flux)
         flux = (flux / mu) - 1
         if flux_err is not None: flux_err = flux_err / mu
+    if flux_type == 'sap_poly3_fit_div':
+        flux = flux - 1
     
     try:
         #AC Results
