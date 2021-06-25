@@ -18,8 +18,10 @@ from astropy.table import Table
 from astropy.io import fits
 
 import math
+import time
 
 #from tess_cpm.interface import cpm_interface as cpm_int
+from scipy.optimize import curve_fit
 
 import tess_cpm
 
@@ -199,6 +201,59 @@ def k2sff_LC(epic):
         
     return(k2sff_lc,k2sff_avail)
 
+def k2sc_LC(epic):
+    #search light curve for given KIC ID
+    search_res = lk.search_lightcurve('EPIC ' + str(epic))
+    #initialize SPOC found,first found
+    lc_found = False
+    lc_first = False
+    
+    try:
+        authors = search_res.table['author']
+    except:
+        k2sc_avail = False
+        k2sc_lc = pd.DataFrame()
+        return(k2sc_lc, k2sc_avail)
+        
+    if 'K2SC' in authors:
+        k2sc_avail = True
+    else:
+        k2sc_avail = False
+        k2sc_lc = pd.DataFrame()
+        return(k2sc_lc, k2sc_avail)
+    
+    lc_holder = []
+    for i in range(len(search_res)):
+        #select search result object
+        search_i = search_res[i]
+        #skip if not SPOC, 120 s exposure
+        if (search_i.author.data[0] == 'K2SC'):# & (search_i.exptime.data[0] == 120):
+            print("Found " + str(search_i.mission[0]) + " data for EPIC " + str(epic) + "!")
+            lc_found = True
+            if (lc_first == False) & (lc_first is not None):
+                lc_first = True
+        else:
+            continue
+        lk_lc = search_res[i].download()
+        lk_lc = lk_lc.remove_outliers(sigma = 5.0)
+        lk_lc_df = lk_lc.to_pandas().reset_index(drop=False)
+        
+        lk_lc_df['campaign'] = np.repeat(a = lk_lc.CAMPAIGN, repeats = len(lk_lc)) #add sector label for my plotting functions
+        lc_holder.append(lk_lc_df) #store in lc_holder
+        
+        #delete stuff
+        fn = lk_lc.FILENAME
+        del lk_lc
+        os.remove(path = fn)
+        
+    if lc_found == False:
+        print("No K2SC data found for EPIC " + str(epic) + ".")
+        k2sc_lc = pd.DataFrame()
+    else:
+        k2sc_lc = pd.concat(lc_holder) #combine lc into 1 pandas dataframe
+        
+    return(k2sc_lc,k2sc_avail)
+
 def kepler_prime_LC(kic):
     #search light curve for given KIC ID
     search_res = lk.search_lightcurve('KIC ' + str(kic))
@@ -338,7 +393,7 @@ def lk_tesscut(tic,ra = None,dec = None,size = 32,
 def cpm_multi_lk(tic, sectors = None, size = [32], bkg_subtract = [False], 
                  bkg_n = [40] ,k=[5], n=[35], exclusion_size = [5], apt_size = [1],
                  l2_reg = [[0.1]], pred_pix_method = ["cosine_similarity"], 
-                 add_poly = False, poly_scale = 2, poly_num_terms = 4):
+                 add_poly = False, poly_scale = 2, poly_num_terms = 4, med_im_header = False):
     
     #search light curve for given TIC ID
     search_res = lk.search_tesscut('TIC ' + str(tic))
@@ -387,7 +442,7 @@ def cpm_multi_lk(tic, sectors = None, size = [32], bkg_subtract = [False],
         j = 0
         for sz in size:
             lk_tesscut_obj = search_res[i].download(cutout_size = sz)
-        
+            
             
             for bkg_sub in bkg_subtract:
                 for bkg_N in bkg_n:
@@ -397,17 +452,26 @@ def cpm_multi_lk(tic, sectors = None, size = [32], bkg_subtract = [False],
                                 for choose_pix in pred_pix_method:
                                     for K in k:
                                         for reg in l2_reg:
-                                            temp_lc = lk_cpm_lc(lk_tesscut_obj = lk_tesscut_obj, med_im_header = False,
-                                                                      bkg_subtract = bkg_sub, bkg_n = bkg_N,
-                                                                      k=K ,n=N, exclusion_size=exclusion,apt_size = apt_s,
-                                                                      l2_reg = reg, pred_pix_method=choose_pix)
-                                            ## add cutout size to flux title!
                                             flux_type = choose_pix[0] + '_bkg=' + str(bkg_sub)[0]
                                             if bkg_sub: 
                                                 flux_type = flux_type + '_bkgN' + str(bkg_N)
                                             else:
                                                 flux_type = flux_type + '_bkgNa'
                                             flux_type = flux_type + '_s' + str(sz) + '_n' + str(N)  + '_ex' + str(exclusion) + '_apt' + str(apt_s) + '_k' + str(K) + '_l2-' + str(reg[0])
+                                            print("Flux type: " + str(flux_type))
+                                            if med_im_header == False:
+                                                temp_lc = lk_cpm_lc(lk_tesscut_obj = lk_tesscut_obj, med_im_header = med_im_header,
+                                                                      bkg_subtract = bkg_sub, bkg_n = bkg_N,
+                                                                      k=K ,n=N, exclusion_size=exclusion,apt_size = apt_s,
+                                                                      l2_reg = reg, pred_pix_method=choose_pix)
+                                            if med_im_header == True:
+                                                temp_lc,_,_ = lk_cpm_lc(lk_tesscut_obj = lk_tesscut_obj, med_im_header = med_im_header,
+                                                                      bkg_subtract = bkg_sub, bkg_n = bkg_N,
+                                                                      k=K ,n=N, exclusion_size=exclusion,apt_size = apt_s,
+                                                                      l2_reg = reg, pred_pix_method=choose_pix)
+                                    
+                                            ## add cutout size to flux title!
+                                            
                                             if j == 0:
                                                 multi_sector_df = temp_lc.rename(columns = {'cpm':flux_type})
                                             if j > 0:
@@ -417,6 +481,7 @@ def cpm_multi_lk(tic, sectors = None, size = [32], bkg_subtract = [False],
             path = lk_tesscut_obj.path
             #del cpm_obj
             del lk_tesscut_obj
+            time.sleep(5)
             os.remove(path = path)                                            
         #add multi sector df to lc holder at end of each sector extraction
         lc_holder.append(multi_sector_df)
@@ -461,10 +526,12 @@ def lk_cpm_lc(lk_tesscut_obj, med_im_header = False, bkg_subtract = False,
             median_im = np.nanmedian(hdu[1].data['FLUX'],axis = 0)
             im_header = hdu[2].header #used for later WCS projection
     
-    
     temp_source = tess_cpm.Source(path, remove_bad=True, bkg_subtract = bkg_subtract, bkg_n = bkg_n)  
     if apt_size == 1:          
-        temp_source.set_aperture(rowlims=[y_cen,y_cen], collims=[x_cen, x_cen])   
+        temp_source.set_aperture(rowlims=[y_cen,y_cen], collims=[x_cen, x_cen])  
+    if apt_size == 2:
+        rowlims,collims = cpm_apt_two_by_two(median_im,x_cen,y_cen)
+        temp_source.set_aperture(rowlims = rowlims, collims = collims)
     if apt_size == 3:
         temp_source.set_aperture(rowlims=[y_cen-1,y_cen+1], collims=[x_cen-1, x_cen+1])   
              
@@ -497,6 +564,33 @@ def lk_cpm_lc(lk_tesscut_obj, med_im_header = False, bkg_subtract = False,
     #     return(cpm_lc_df)
     # else:
     #     return(pd.DataFrame())
+    
+def cpm_apt_two_by_two(median_im,x_cen,y_cen):
+    center_flux = median_im[y_cen,x_cen]
+    
+    apt_dict = {'apt1':median_im[y_cen:y_cen+2,x_cen:x_cen+2],
+                'apt2':median_im[y_cen-1:y_cen+1,x_cen:x_cen+2],
+                'apt3':median_im[y_cen-1:y_cen+1,x_cen-1:x_cen+1],
+                'apt4':median_im[y_cen:y_cen+2,x_cen-1:x_cen+1]}
+    
+    dev_holder = []
+    for apt in apt_dict.keys():
+        temp_dev = np.nanmean([np.abs(flux - center_flux) for flux in apt_dict[apt]])
+        temp_df = pd.DataFrame(data = {'apt':[apt],'dev':[temp_dev]})
+        dev_holder.append(temp_df)
+    dev_df = pd.concat(dev_holder)
+    best_apt = dev_df['apt'].iloc[np.where(dev_df['dev'] == np.nanmin(dev_df['dev']))][0]
+    
+    rows_dict = {'apt1':[y_cen,y_cen+1], 'apt2':[y_cen-1,y_cen], 'apt3':[y_cen-1,y_cen], 'apt4':[y_cen,y_cen+1]}
+    cols_dict = {'apt1':[x_cen,x_cen+1], 'apt2':[x_cen,x_cen+1], 'apt3':[x_cen-1,x_cen], 'apt4':[x_cen-1,x_cen]}
+    
+    rowlims = rows_dict[best_apt]
+    collims = cols_dict[best_apt]
+    
+    return(rowlims,collims)
+    
+    
+    
 
 def get_lk_LCs(tic):
     #search MAST archive with tic. eventually needs to change to search_lightcurve,
@@ -528,4 +622,37 @@ def get_lk_LCs(tic):
     return(all_lcs,spoc120_lc,lcf_search_table)
     
     # with open(lc_fn,'wb') as outfile:
-    #     pkl.dump((pdc_lc_df,sap_lc_df),outfile)       
+    #     pkl.dump((pdc_lc_df,sap_lc_df),outfile)  
+
+
+def poly_lc_fit(x,y,y_err = None,poly_order = 3):
+    if poly_order == 3:
+        popt, pcov = curve_fit(poly3, x, y)
+    if poly_order == 6:
+        popt, pcov = curve_fit(poly6,x,y)
+    
+    return(popt,pcov)
+    
+def poly3(x,a,b,c,d):
+    return(a + b*x + c*x**2 + d*x**3) 
+
+def poly6(x,a,b,c,d,e,f,g):
+    return(a + b*x + c*x**2 + d*x**3 + e*x**4 + f*x**5 + g*x**6)
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+     
