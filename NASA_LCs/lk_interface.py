@@ -530,9 +530,12 @@ def lk_cpm_lc(lk_tesscut_obj, med_im_header = False, bkg_subtract = False,
     if apt_size == 1:          
         temp_source.set_aperture(rowlims=[y_cen,y_cen], collims=[x_cen, x_cen])  
     if apt_size == 2:
+        rowlims,collims = cpm_apt_two_by_one(median_im,x_cen,y_cen)
+        temp_source.set_aperture(rowlims = rowlims, collims = collims)
+    if apt_size == 4:
         rowlims,collims = cpm_apt_two_by_two(median_im,x_cen,y_cen)
         temp_source.set_aperture(rowlims = rowlims, collims = collims)
-    if apt_size == 3:
+    if apt_size == 9:
         temp_source.set_aperture(rowlims=[y_cen-1,y_cen+1], collims=[x_cen-1, x_cen+1])   
              
     temp_source.add_cpm_model(exclusion_size = exclusion_size, n=n, predictor_method = pred_pix_method); 
@@ -583,6 +586,30 @@ def cpm_apt_two_by_two(median_im,x_cen,y_cen):
     
     rows_dict = {'apt1':[y_cen,y_cen+1], 'apt2':[y_cen-1,y_cen], 'apt3':[y_cen-1,y_cen], 'apt4':[y_cen,y_cen+1]}
     cols_dict = {'apt1':[x_cen,x_cen+1], 'apt2':[x_cen,x_cen+1], 'apt3':[x_cen-1,x_cen], 'apt4':[x_cen-1,x_cen]}
+    
+    rowlims = rows_dict[best_apt]
+    collims = cols_dict[best_apt]
+    
+    return(rowlims,collims)
+
+def cpm_apt_two_by_one(median_im,x_cen,y_cen):
+    center_flux = median_im[y_cen,x_cen]
+    
+    apt_dict = {'apt1':median_im[y_cen:y_cen+2,x_cen],
+                'apt2':median_im[y_cen-1:y_cen+1,x_cen],
+                'apt3':median_im[y_cen,x_cen:x_cen+2],
+                'apt4':median_im[y_cen,x_cen-1:x_cen+1]}
+    
+    dev_holder = []
+    for apt in apt_dict.keys():
+        temp_dev = np.nanmean([np.abs(flux - center_flux) for flux in apt_dict[apt]])
+        temp_df = pd.DataFrame(data = {'apt':[apt],'dev':[temp_dev]})
+        dev_holder.append(temp_df)
+    dev_df = pd.concat(dev_holder)
+    best_apt = dev_df['apt'].iloc[np.where(dev_df['dev'] == np.nanmin(dev_df['dev']))][0]
+    
+    rows_dict = {'apt1':[y_cen,y_cen+1], 'apt2':[y_cen-1,y_cen], 'apt3':[y_cen,y_cen], 'apt4':[y_cen,y_cen]}
+    cols_dict = {'apt1':[x_cen,x_cen], 'apt2':[x_cen,x_cen], 'apt3':[x_cen,x_cen+1], 'apt4':[x_cen-1,x_cen]}
     
     rowlims = rows_dict[best_apt]
     collims = cols_dict[best_apt]
