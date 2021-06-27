@@ -393,7 +393,8 @@ def lk_tesscut(tic,ra = None,dec = None,size = 32,
 def cpm_multi_lk(tic, sectors = None, size = [32], bkg_subtract = [False], 
                  bkg_n = [40] ,k=[5], n=[35], exclusion_size = [5], apt_size = [1],
                  l2_reg = [[0.1]], pred_pix_method = ["cosine_similarity"], 
-                 add_poly = False, poly_scale = 2, poly_num_terms = 4, med_im_header = False):
+                 add_poly = False, poly_scale = 2, poly_num_terms = 4, med_im_header = False,
+                 obj_num = None):
     
     #search light curve for given TIC ID
     search_res = lk.search_tesscut('TIC ' + str(tic))
@@ -459,6 +460,8 @@ def cpm_multi_lk(tic, sectors = None, size = [32], bkg_subtract = [False],
                                                 flux_type = flux_type + '_bkgNa'
                                             flux_type = flux_type + '_s' + str(sz) + '_n' + str(N)  + '_ex' + str(exclusion) + '_apt' + str(apt_s) + '_k' + str(K) + '_l2-' + str(reg[0])
                                             print("Flux type: " + str(flux_type))
+                                            if obj_num is not None:
+                                                print("Object number " + str(obj_num) + ".")
                                             if med_im_header == False:
                                                 temp_lc = lk_cpm_lc(lk_tesscut_obj = lk_tesscut_obj, med_im_header = med_im_header,
                                                                       bkg_subtract = bkg_sub, bkg_n = bkg_N,

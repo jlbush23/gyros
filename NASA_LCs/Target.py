@@ -137,14 +137,16 @@ class Target:
     def add_cpm_multi_LC(self,sectors = None, size = [32], bkg_subtract = [False], 
                          bkg_n = [40] ,k=[5], n=[35], exclusion_size = [5], apt_size = [1],
                          l2_reg = [[0.1]], pred_pix_method = ["cosine_similarity"], 
-                         add_poly = False, poly_scale = 2, poly_num_terms = 4, median_im_header = False):
+                         add_poly = False, poly_scale = 2, poly_num_terms = 4, median_im_header = False,
+                         obj_num = None):
         
         self.cpm_multi_lc, self.tc_avail = lk_int.cpm_multi_lk(tic = self.tic, sectors = sectors,med_im_header = median_im_header,
                                                                size = size, bkg_subtract = bkg_subtract, 
                                                                bkg_n = bkg_n, k= k, n= n, exclusion_size = exclusion_size, 
                                                                apt_size = apt_size, l2_reg = l2_reg, 
                                                                pred_pix_method = pred_pix_method, 
-                                                               add_poly = add_poly, poly_scale = poly_scale, poly_num_terms = poly_num_terms)
+                                                               add_poly = add_poly, poly_scale = poly_scale, poly_num_terms = poly_num_terms,
+                                                               obj_num = obj_num)
     
     def run_cpm_multi_rots(self):
         flux_list = self.cpm_multi_lc.drop(columns = ['time','sector']).columns.to_numpy(dtype = 'str')
