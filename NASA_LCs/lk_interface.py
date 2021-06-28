@@ -307,8 +307,8 @@ def kepler_prime_LC(kic):
         
     return(kepler_lc,kepler_avail)
 
-def lk_tesscut(tic,ra = None,dec = None,size = 32,
-               bkg_subtract = False, bkg_n=40, k = 5, n = 35, 
+def lk_tesscut(tic,ra = None,dec = None,size = 50,
+               bkg_subtract = True, bkg_n=300, k = 100, n = 100, 
                l2_reg = [0.1], exclusion_size = 5, apt_size = 1, 
                pred_pix_method = "similar_brightness", 
                add_poly = False, poly_scale = 2, poly_num_terms = 4):
@@ -364,11 +364,27 @@ def lk_tesscut(tic,ra = None,dec = None,size = 32,
         if i == 0:
             med_im_header = True
             lc_df,median_im,im_header = lk_cpm_lc(lk_tesscut_obj = lk_tesscut_obj,
-                                                  med_im_header = med_im_header)
+                                                  med_im_header = med_im_header,
+                                                  size = size,
+                                                  bkg_subtract = bkg_subtract, bkg_n=bkg_n, 
+                                                  k = k, n = n, 
+                                                  l2_reg = l2_reg, 
+                                                  exclusion_size = exclusion_size, apt_size = apt_size, 
+                                                  pred_pix_method = pred_pix_method, 
+                                                  add_poly = add_poly, poly_scale = poly_scale, 
+                                                  poly_num_terms = poly_num_terms)
         else:
             med_im_header = False
             lc_df = lk_cpm_lc(lk_tesscut_obj = lk_tesscut_obj,
-                                      med_im_header = med_im_header)        
+                              med_im_header = med_im_header,
+                              size = size,
+                              bkg_subtract = bkg_subtract, bkg_n=bkg_n, 
+                              k = k, n = n, 
+                              l2_reg = l2_reg, 
+                              exclusion_size = exclusion_size, apt_size = apt_size, 
+                              pred_pix_method = pred_pix_method, 
+                              add_poly = add_poly, poly_scale = poly_scale, 
+                              poly_num_terms = poly_num_terms)        
         
         #append to lc_holder for later concatenation
         lc_holder.append(lc_df) #store in lc_holder
@@ -499,8 +515,8 @@ def cpm_multi_lk(tic, sectors = None, size = [32], bkg_subtract = [False],
     
     return(multi_lc_df, tc_avail)
 
-def lk_cpm_lc(lk_tesscut_obj, med_im_header = False, bkg_subtract = False, 
-              bkg_n=40, k = 5, n = 35, l2_reg = [0.1], apt_size = 1,
+def lk_cpm_lc(lk_tesscut_obj, med_im_header = False, bkg_subtract = True, 
+              bkg_n=300, k = 100, n = 100, l2_reg = [0.1], apt_size = 1,
               exclusion_size = 5, pred_pix_method = "similar_brightness", 
               add_poly = False, poly_scale = 2, poly_num_terms = 4):
     # if self.use_tic == True:
