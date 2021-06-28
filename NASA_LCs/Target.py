@@ -92,7 +92,11 @@ class Target:
             return(self.kepler_avail)
         
         
-    def add_cpm_LC(self,bkg_subtract = False, bkg_n = 0, k=100, n=100, size = 50, l2_reg = [0.1], exclusion_size = 5, pred_pix_method = "similar_brightness", save_lc = False, keep_tesscut = False, add_poly = False, poly_scale = 2, poly_num_terms = 4):
+    def add_cpm_LC(self,bkg_subtract = True, bkg_n = 300, k=100, n=100, 
+                   size = 50, l2_reg = [0.1], exclusion_size = 5, apt_size = 1,
+                   pred_pix_method = "similar_brightness", 
+                   save_lc = False, keep_tesscut = False, 
+                   add_poly = False, poly_scale = 2, poly_num_terms = 4):
         # cpm_obj = cpm_int(tic = self.tic)
         # cpm_obj.download_extract(bkg_subtract = bkg_subtract,
         #                          bkg_n = bkg_n,
@@ -114,7 +118,17 @@ class Target:
         self.cpm_lc, self.median_cpm_im, self.cpm_im_header, self.tc_avail = lk_int.lk_tesscut(tic = self.tic,
                                                                                 ra = self.ra,
                                                                                 dec = self.dec,
-                                                                                size = 32)
+                                                                                size = size,
+                                                                                apt_size = apt_size,
+                                                                                l2_reg = l2_reg,
+                                                                                exclusion_size = exclusion_size,
+                                                                                pred_pix_method  = pred_pix_method,
+                                                                                n = n, k = k,
+                                                                                bkg_subtract = bkg_subtract,
+                                                                                bkg_n = bkg_n,
+                                                                                add_poly = add_poly,
+                                                                                poly_scale = poly_scale,
+                                                                                poly_num_terms = poly_num_terms)
         if len(self.cpm_lc) > 0: 
             self.available_attributes.append('cpm_lc')
             

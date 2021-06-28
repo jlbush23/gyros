@@ -308,8 +308,10 @@ def kepler_prime_LC(kic):
     return(kepler_lc,kepler_avail)
 
 def lk_tesscut(tic,ra = None,dec = None,size = 32,
-               bkg_subtract = False, bkg_n=40, k = 5, n = 35, l2_reg = [0.1], exclusion_size = 5, apt_size = 1, 
-               pred_pix_method = "similar_brightness", add_poly = False, poly_scale = 2, poly_num_terms = 4):
+               bkg_subtract = False, bkg_n=40, k = 5, n = 35, 
+               l2_reg = [0.1], exclusion_size = 5, apt_size = 1, 
+               pred_pix_method = "similar_brightness", 
+               add_poly = False, poly_scale = 2, poly_num_terms = 4):
     #search light curve for given TIC ID
     search_res = lk.search_tesscut('TIC ' + str(tic))
     #initialize SPOC found,first found
