@@ -247,11 +247,12 @@ class Target:
             
     def run_k2sff_rots(self,min_freq = 1/50):
         if 'k2sff_lc' in self.available_attributes:
-            flux_type = ['flux']
-            keep_cols = ['time','flux','sector']
-            k2sff_lc = self.k2sff_lc.rename(columns = {'campaign':'sector'})[keep_cols]
-            flux_err_avail = False
             try:
+                flux_type = ['flux']
+                keep_cols = ['time','flux','sector']
+                k2sff_lc = self.k2sff_lc.rename(columns = {'campaign':'sector'})[keep_cols]
+                flux_err_avail = False
+            
                 for flux in flux_type:
                     LS_res,LS_periodogram_df = rot_tools.my_LS_multi_sector(lc_df = k2sff_lc,
                                                                               flux_type = flux,
