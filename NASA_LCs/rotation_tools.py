@@ -614,16 +614,18 @@ def period_graph(target_name, lc_df, flux_type, LS_res, LS_periodogram, AC_res, 
         phase_norm_AC = (bin_time % assoc_AC_per)/assoc_AC_per #from AC
         #phase_norm_AC = phase_norm_AC.to_numpy()
     #detect changes in phase
+    
+    c1 = [i+1 for i in range(len(phase_norm_LS) -1) if (phase_norm_LS[i+1] - phase_norm_LS[i]) < 0]
+    c2 = [i+1 for i in range(len(phase_norm_AC) -1) if (phase_norm_AC[i+1] - phase_norm_AC[i]) < 0]
+    # c1 = []
+    # for i in range(len(phase_norm_LS)-1):
+    #     if phase_norm_LS[i+1] - phase_norm_LS[i] < 0:
+    #         c1.append(i+1)
 
-    c1 = []
-    for i in range(len(phase_norm_LS)-1):
-        if phase_norm_LS[i+1] - phase_norm_LS[i] < 0:
-            c1.append(i+1)
-
-    c2 = []
-    for i in range(len(phase_norm_AC)-1):
-        if phase_norm_AC[i+1] - phase_norm_AC[i] < 0:
-            c2.append(i+1)
+    # c2 = []
+    # for i in range(len(phase_norm_AC)-1):
+    #     if phase_norm_AC[i+1] - phase_norm_AC[i] < 0:
+    #         c2.append(i+1)
     
     # LS phase fold
 
