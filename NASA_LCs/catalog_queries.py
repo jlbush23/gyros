@@ -213,7 +213,7 @@ def get_kic(ra,dec):
             obs_table = Catalogs.query_region(coordinates = query_string, radius = rad*u.deg, catalog = "TIC")
             obs_df = obs_table.to_pandas()
             if len(obs_table['ID']) == 1:
-                kic = obs_table['KIC'][0]
+                kic = obs_df['KIC'][0]
                 kic_found = True
                 continue
             if len(obs_df[obs_df['GAIA'].to_numpy(dtype = 'str') != '']) == 1:
@@ -221,10 +221,10 @@ def get_kic(ra,dec):
                 kic = temp_obs_df['KIC'].iloc[0]
                 kic_found = True
                 continue
-            if len(np.unique(obs_df[obs_df['HIP'].to_numpy(dtype = 'str') != '']['HIP'])) == 1:
-                kic = obs_table['KIC'][0]
-                kic_found = True
-                continue
+            # if len(np.unique(obs_df[obs_df['HIP'].to_numpy(dtype = 'str') != '']['HIP'])) == 1:
+            #     kic = obs_df['KIC'][0]
+            #     kic_found = True
+            #     continue
     if kic_found == False:
         kic = np.nan
         print("Didn't find KIC for this object.")
