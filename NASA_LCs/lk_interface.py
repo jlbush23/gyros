@@ -307,6 +307,9 @@ def kepler_prime_LC(kic):
         
     return(kepler_lc,kepler_avail)
 
+def lk_tesscut_bphot(tic):
+    return tic
+
 def lk_tesscut(tic,ra = None,dec = None,size = 50,
                bkg_subtract = True, bkg_n=300, k = 100, n = 100, 
                l2_reg = [0.1], exclusion_size = 5, apt_size = 1, 

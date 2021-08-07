@@ -384,23 +384,27 @@ def best_period(rot_df):
         return((np.nan,np.nan,np.nan))
     
 
-def period_graph(target_name, lc_df, flux_type, LS_res, LS_periodogram, AC_res, AC_periodogram):
+def period_graph(target_name, lc_df, flux_type, LS_res, LS_periodogram, AC_res, AC_periodogram, target_df):
     #This stuff is everything, use it for any python plot to make it nicer.
+    import matplotlib as mpl
+    mpl.rcParams['font.sans-serif'] = "DejaVu Sans"
+    mpl.rcParams['font.family'] = "sans-serif"
+    mpl.rcParams['text.usetex'] = False
     mpl.rcParams['lines.linewidth'] =3
     mpl.rcParams['axes.linewidth'] = 2
     mpl.rcParams['xtick.major.width'] =2
     mpl.rcParams['ytick.major.width'] =2
     mpl.rcParams['xtick.minor.width'] =1.5
     mpl.rcParams['ytick.minor.width'] =1.5
-    mpl.rcParams['ytick.labelsize'] = 17
-    mpl.rcParams['xtick.labelsize'] = 17
-    mpl.rcParams['axes.labelsize'] = 17
+    mpl.rcParams['ytick.labelsize'] = 10
+    mpl.rcParams['xtick.labelsize'] = 10
+    mpl.rcParams['axes.labelsize'] = 10
     #mpl.rcParams['legend.numpoints'] = 1
     mpl.rcParams['axes.labelweight']='semibold'
     mpl.rcParams['mathtext.fontset']='stix'
     mpl.rcParams['font.weight'] = 'semibold'
     mpl.rcParams['axes.titleweight']='semibold'
-    mpl.rcParams['axes.titlesize']=17
+    mpl.rcParams['axes.titlesize']=10
     
     # AC_power = self.periodogram_AC['power']
     
@@ -410,20 +414,22 @@ def period_graph(target_name, lc_df, flux_type, LS_res, LS_periodogram, AC_res, 
     sector_list = np.unique(lc_df['sector'].to_numpy())
     
     ### PLOT FULL LC
-    fig = plt.figure(figsize = (15,12))
+    fig = plt.figure(figsize = (7.5,6), constrained_layout = True)
     outer = gridspec.GridSpec(2, 1,figure = fig,height_ratios = [1,3])
     spec1 = gridspec.GridSpecFromSubplotSpec(1,len(sector_list),subplot_spec = outer[0],wspace=0.1)
-    spec2 = gridspec.GridSpecFromSubplotSpec(2,2,subplot_spec = outer[1], hspace = 0.2)
+    spec2 = gridspec.GridSpecFromSubplotSpec(3,2,subplot_spec = outer[1], hspace = 0.2)
     
     axs = []
     for i in range(len(sector_list)):
         if i == 0: axs.append(fig.add_subplot(spec1[0,i]))
         if i>0: axs.append(fig.add_subplot(spec1[0,i],sharey=axs[i-1])) 
-    row2ax1 = fig.add_subplot(spec2[0,0])   
-    row2ax2 = fig.add_subplot(spec2[0,1])
-    row3ax1 = fig.add_subplot(spec2[1,0])
-    row3ax2 = fig.add_subplot(spec2[1,1])
-    plt.tight_layout()
+    r2ax1 = fig.add_subplot(spec2[0,0])
+    r2ax2 = fig.add_subplot(spec2[0,1], frame_on = False, xticks = [], yticks = [])
+    row2ax1 = fig.add_subplot(spec2[1,0])   
+    row2ax2 = fig.add_subplot(spec2[1,1])
+    row3ax1 = fig.add_subplot(spec2[2,0])
+    row3ax2 = fig.add_subplot(spec2[2,1])
+    #plt.tight_layout()
     
     d = .015
 
@@ -440,8 +446,8 @@ def period_graph(target_name, lc_df, flux_type, LS_res, LS_periodogram, AC_res, 
                 time = temp_lc_df['time'].to_numpy(dtype = 'float')
             flux = temp_lc_df[flux_type].to_numpy(dtype = 'float')
             
-            bin_flux,bin_time,bin_idx = bin_stat(x=time,values=flux,statistic = 'median', bins = round(0.05*len(time)))
-            bin_time = bin_time[0:len(bin_time)-1]
+            bin_flux,bin_time,bin_idx = bin_stat(x=time,values=flux,statistic = 'median', bins = round(0.075*len(time)))
+            bin_time = bin_time[1:len(bin_time)]
                   
             if flux_type != 'cpm':
                 bin_flux = bin_flux/np.nanmedian(bin_flux)
@@ -454,8 +460,8 @@ def period_graph(target_name, lc_df, flux_type, LS_res, LS_periodogram, AC_res, 
                     flux_min.append(np.percentile(a = flux, q = 2))
                 
             if flux_type == 'cpm':
-                ax.scatter(time,flux, s = 1, label = sector)#, c = c_sector[i])
-                #plt.plot(bin_time,bin_flux, c = 'black', linewidth = 1)
+                ax.scatter(time,flux, s = 0.3, label = sector)#, c = c_sector[i])
+                ax.plot(bin_time,bin_flux, c = 'black', linewidth = 0.75)
             if j== int(round(len(sector_list)/2)) - 1:    
                 if flux_type == 'sap_flux':
                     ax.set_title("SAP Light Curve of " + str(target_name), loc = 'left')
@@ -511,10 +517,10 @@ def period_graph(target_name, lc_df, flux_type, LS_res, LS_periodogram, AC_res, 
 #            ymax2 = LS_results['LS_Power2'].to_numpy()[0]/(1.05*LS_results['LS_Power1'].to_numpy()[0])
 #            ymax3 = LS_results['LS_Power3'].to_numpy()[0]/(1.05*LS_results['LS_Power1'].to_numpy()[0])
 #            
-        row2ax1.plot(period,power)#,c = c_sector[i])
-        row2ax1.scatter(LS_results['LS_Per1'],LS_results['LS_Power1'], c = 'r')
-        row2ax1.scatter(LS_results['LS_Per2'],LS_results['LS_Power2'], c = 'r')
-        row2ax1.scatter(LS_results['LS_Per3'],LS_results['LS_Power3'], c = 'r')
+        row2ax1.plot(period,power,linewidth=0.5)#,c = c_sector[i])
+        row2ax1.scatter(LS_results['LS_Per1'],LS_results['LS_Power1'], c = 'r',s=0.3)
+        row2ax1.scatter(LS_results['LS_Per2'],LS_results['LS_Power2'], c = 'r',s=0.3)
+        row2ax1.scatter(LS_results['LS_Per3'],LS_results['LS_Power3'], c = 'r',s=0.3)
 #            plt.axvline(x=LS_results['LS_Per1'].to_numpy()[0], ymin=0.01,ymax = ymax1, c= 'r', linewidth = 4)
 #            plt.axvline(x=LS_results['LS_Per2'].to_numpy()[0], ymin=0.01,ymax = ymax2, c= 'r', linewidth = 2)
 #            plt.axvline(x=LS_results['LS_Per3'].to_numpy()[0], ymin=0.01,ymax = ymax3, c= 'r', linewidth = 1)
@@ -550,11 +556,11 @@ def period_graph(target_name, lc_df, flux_type, LS_res, LS_periodogram, AC_res, 
         period = AC_periodogram[key]['Period']
         power = AC_periodogram[key]['AC Power']
         #print(AC_results)
-        row2ax2.plot(period,power)#, c = c_sector[i])
+        row2ax2.plot(period,power,linewidth = 0.5)#, c = c_sector[i])
 #             plt.scatter(AC_results['AC_Per1'],AC_results['AC_Power1'], c = 'r')
 #             plt.scatter(AC_results['AC_Per2'],AC_results['AC_Power2'], c = 'r')
 #             plt.scatter(AC_results['AC_Per3'],AC_results['AC_Power3'], c = 'r')
-        row2ax2.axvline(x=AC_results['ac_period'][0],color = 'red', ymin=0.01, ymax = 0.99, linewidth = 4)
+        row2ax2.axvline(x=AC_results['ac_period'][0],color = 'red', ymin=0.01, ymax = 0.99, linewidth = 0.5)
 #            plt.axvline(x=AC_results['AC_Per2'],color = 'red', ymin=0.01, ymax = (AC_results['AC_Power2'] - np.min(AC_power))/(AC_height + 0.05*AC_height), linewidth = 2)
 #            plt.axvline(x=AC_results['AC_Per3'],color = 'red', ymin=0.01, ymax = (AC_results['AC_Power3'] - np.min(AC_power))/(AC_height + 0.05*AC_height), linewidth = 1)
     
@@ -596,9 +602,10 @@ def period_graph(target_name, lc_df, flux_type, LS_res, LS_periodogram, AC_res, 
     
     if type(time_best_sector.to_numpy()[0]) == np.datetime64: time_best_sector = Time(time_best_sector).jd
 
-    bin_flux,bin_time,bin_idx = bin_stat(x=time_best_sector,values=flux_best_sector,statistic = 'median', bins = round(0.05*len(time_best_sector)))
-    bin_time = bin_time[0:len(bin_time)-1]
-    bin_flux = bin_flux/np.nanmedian(bin_flux)
+    bin_flux,bin_time,bin_idx = bin_stat(x=time_best_sector,values=flux_best_sector,
+                                         statistic = 'median', bins = round(0.075*len(time_best_sector)))
+    bin_time = bin_time[1:len(bin_time)]
+    #bin_flux = bin_flux/np.nanmedian(bin_flux)
     #flux = flux/np.median(flux)    
     
     #normalized phases arrays
@@ -636,11 +643,11 @@ def period_graph(target_name, lc_df, flux_type, LS_res, LS_periodogram, AC_res, 
     first=0
     if (flux_type == 'cpm') | (flux_type == 'fcor'):
         for change in c1:
-            row3ax1.scatter(phase_norm_LS[first:change],flux_best_sector[first:change])
+            row3ax1.scatter(phase_norm_LS[first:change],flux_best_sector[first:change],s=0.3)
             first=change+1
     else:
         for change in c1:
-            row3ax1.scatter(phase_norm_LS[first:change],bin_flux[first:change])
+            row3ax1.scatter(phase_norm_LS[first:change],bin_flux[first:change],s=0.3)
             first=change+1
     row3ax1.set_xlabel("Fraction of Period")
     row3ax1.set_ylabel("Normalized Flux")
@@ -655,22 +662,71 @@ def period_graph(target_name, lc_df, flux_type, LS_res, LS_periodogram, AC_res, 
     first = 0
     if (flux_type == 'cpm') | (flux_type == 'fcor'):
         for change in c2:
-            row3ax2.scatter(phase_norm_AC[first:change],flux_best_sector[first:change])
+            row3ax2.scatter(phase_norm_AC[first:change],flux_best_sector[first:change],s=0.3)
             first=change+1
     else:
         for change in c2:
-            row3ax2.scatter(phase_norm_AC[first:change],bin_flux[first:change])
+            row3ax2.scatter(phase_norm_AC[first:change],bin_flux[first:change],s=0.3)
             first=change+1        
     row3ax2.set_xlabel("Fraction of Period")
     row3ax2.set_ylabel("Normalized Flux")
     row3ax2.set_title("AC Phase-Folded", loc = 'left')
     
-    fig.tight_layout()
-    plt.subplots_adjust(hspace = 0.2)
-    plt.close(fig=fig)
+    #fig.tight_layout()
+    # plt.subplots_adjust(hspace = 0.2)
+    # plt.close(fig=fig)
+    
+    ## plot best sector
+    # bin_flux,bin_time,bin_idx = bin_stat(x=time_best_sector,values=flux_best_sector,
+    #                                      statistic = 'median', bins = round(0.05*len(time_best_sector)))
+    # bin_time = bin_time[0:len(bin_time)-1]
+                  
+    
+    r2ax1.scatter(time_best_sector,flux_best_sector, c = 'black', alpha = 0.7, s = 0.3)
+    r2ax1.plot(bin_time,bin_flux, c = 'orange', linewidth = 0.75)
+    r2ax1.set(xlabel = 'Time (BJD -2457000)',
+              ylabel = 'Normalized Flux', title = 'Best Sector Close-Up')
+    
+    ## plot available info
+    r2ax2.annotate("TIC " + str(target_df['tic'][0]), xy = (-0.25,0.6), xycoords = "axes fraction",
+             fontsize = 14)
+    
+    r2ax2.annotate("Tmag = " + str(target_df['Tmag'][0]), xy = (-0.25,0.35), xycoords = "axes fraction",
+                 fontsize = 14)#, color = "green")
+    
+    ls_div_ac = best_per / assoc_AC_per
+    
+    r2ax2.annotate("LS / ACF = " + str(round(ls_div_ac,4)), xy = (-0.25,0.1), xycoords = "axes fraction",
+                   fontsize = 14)
+
+    ratio_type,ratio_color = ratio_res(rot_ratio = ls_div_ac)
+    
+    r2ax2.annotate("Match Status: " + str(ratio_type), xy = (-0.25,0.9), xycoords = "axes fraction",
+                   fontsize = 16, color = ratio_color)
+            
+    
+    #fig.tight_layout()
+    plt.close(fig = fig)
+    
+    
     
     
     return(fig)
+
+def ratio_res(rot_ratio, perc_err = 0.1):
+    if (rot_ratio < 1 + perc_err) & (rot_ratio > 1 - perc_err):
+        ratio_type = "Match"
+        ratio_color = "green"
+    elif (rot_ratio < 2 + perc_err) & (rot_ratio > 2 - perc_err):
+        ratio_type = "0.5x Alias"
+        ratio_color = "#B2A700"  
+    elif (rot_ratio > 0.5 - perc_err) & (rot_ratio < 0.5 + perc_err):
+        ratio_type = "2x Alias"
+        ratio_color = "#B2A700"
+    else:
+        ratio_type = "No Match"
+        ratio_color = "red"  
+    return(ratio_type,ratio_color)
         
         
     
