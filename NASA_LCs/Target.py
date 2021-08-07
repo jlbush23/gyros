@@ -234,6 +234,7 @@ class Target:
             
     def cpm_rot_fig(self):
         if 'cpm_rot_dict' in self.available_attributes:
+            self.target_info_query()
             LS_res = self.cpm_rot_dict['LS_res']
             LS_periodogram = self.cpm_rot_dict['LS_periodogram']
             AC_res = self.cpm_rot_dict['AC_res']
@@ -241,7 +242,8 @@ class Target:
             self.cpm_rot_fig = rot_tools.period_graph(target_name = 'TIC ' + str(self.tic),
                                           lc_df = self.cpm_lc, flux_type = 'cpm',
                                           LS_res = LS_res, LS_periodogram = LS_periodogram,
-                                          AC_res = AC_res, AC_periodogram = AC_periodogram)
+                                          AC_res = AC_res, AC_periodogram = AC_periodogram,
+                                          target_df = self.target_df)
         else:
             print("Need to run_cpm_rots first!")
             
