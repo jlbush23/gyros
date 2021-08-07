@@ -111,8 +111,8 @@ def load_kerr(ext_pop = True, all_ys = True):
     ext_pop_fn = os.path.join(lit_rot_folder,'ALL_EXTENDED_POP_CANDIDATES.csv')
     all_ys_fn = os.path.join(lit_rot_folder,'ALL_CANDIDATE_YS_PROPERTIES.csv')
     
-    if ext_pop: ext_pop_df = pd.read_csv(ext_pop_fn)
-    if all_ys: all_ys_df = pd.read_csv(all_ys_fn)
+    if ext_pop: ext_pop_df = pd.read_csv(ext_pop_fn).rename(columns = {'RA':'ra','Dec':'dec'})
+    if all_ys: all_ys_df = pd.read_csv(all_ys_fn).rename(columns = {'RA':'ra','Dec':'dec'})
     
     if ext_pop & all_ys:
         return(ext_pop_df, all_ys_df)
