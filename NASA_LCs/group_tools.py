@@ -105,6 +105,39 @@ def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'],
     # group.save_plot_df(fn = plot_df_fn)
     # save_group_object(group,group_fn)
     
+def load_kerr(ext_pop = True, all_ys = True):
+    lit_rot_folder = os.path.join(os.path.expanduser("~"),'NASA_LCs','literature_rotations')
+    
+    ext_pop_fn = os.path.join(lit_rot_folder,'ALL_EXTENDED_POP_CANDIDATES.csv')
+    all_ys_fn = os.path.join(lit_rot_folder,'ALL_CANDIDATE_YS_PROPERTIES.csv')
+    
+    if ext_pop: ext_pop_df = pd.read_csv(ext_pop_fn)
+    if all_ys: all_ys_df = pd.read_csv(all_ys_fn)
+    
+    if ext_pop & all_ys:
+        return(ext_pop_df, all_ys_df)
+    elif (ext_pop == True) & ( all_ys == False):
+        return(ext_pop_df)
+    elif (ext_pop == False) & ( all_ys == True):
+        return( all_ys_df)
+    else:
+        print("At least one of 'groups' or 'stars' needs to be 'True'.")
+        return()
+    
+def load_kerr_tab3():
+    tlc = np.linspace(1,27,27)
+    name = ['Cepheus Flare', 'Pleiades', 'Taurus-Orion I', 'Ophiuchus Southeast', 'Fornax-Horologium',
+            'CMa North', 'Aquila East', 'Cepheus Far North', 'Vela-CG7', 'ASCC 123', 'Cepheus-Cygnus', 'Lyra',
+            'Cerberus','Carina-Musca', 'Perseus', 'Perseus OB3', 'Taurus-Orion II','Greater Taurus', 
+            'IC 2391', 'NGC 2451A', 'Chamaeleon', 'Sco-Cen', 'Taurus-Orion III', 'Vela-CG4', 'Taurus-Orion IV', 
+            'Monoceros Southwest', 'Greater Orion']
+    n = [17,23,24,31,40,28,30,219,111,34,36,29,66,168,264,145,64,674,101,51,259,7394,27,551,108,292,757]
+    age = [11.2, 80, 10.6, 17.5, 38.5, 30.2, 20.2, 23.8, 14.4, 49.5,32.6, 31.0, 30.0,
+            32.0, np.nan,np.nan,41.5,np.nan,45.0,48.5,np.nan,np.nan,15.2,33.7,21.3, 25.5, np.nan]
+    tab3_df = pd.DataFrame(data = {'tlc':tlc,'name':name,'n':n,'age':age})
+    return(tab3_df)
+    
+    
 def load_theia(groups = True, stars = True):
     lit_rot_folder = os.path.join(os.path.expanduser("~"),'NASA_LCs','literature_rotations')
     
