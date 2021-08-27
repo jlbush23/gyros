@@ -19,7 +19,7 @@ import NASA_LCs.target_tools as tt
 from tess_cpm.interface import cpm_interface as cpm_int
 
 class Target:
-    def __init__(self,tic = None, ra = None, dec = None, query_info = False, kic = None, epic = None,
+    def __init__(self,tic = None, ra = None, dec = None, query_info = True, kic = None, epic = None,
                  sap_rot = None, sap_amp = None):
         self.tic = tic
         self.ra = ra
@@ -400,6 +400,7 @@ class Target:
             
     def spoc_rot_fig(self):
         flux_type = ['sap_flux','pdcsap_flux']
+        self.target_info_query()
         if 'tess_pdc_rot_dict' in self.available_attributes:
             for flux in flux_type:
                 if flux == 'sap_flux':
@@ -410,7 +411,8 @@ class Target:
                     self.tess_sap_rot_fig = rot_tools.period_graph(target_name = 'TIC ' + str(self.tic),
                                                   lc_df = self.spoc_lc, flux_type = flux,
                                                   LS_res = LS_res, LS_periodogram = LS_periodogram,
-                                                  AC_res = AC_res, AC_periodogram = AC_periodogram)
+                                                  AC_res = AC_res, AC_periodogram = AC_periodogram,
+                                                  target_df = self.target_df)
                 if flux == 'pdcsap_flux':
                     LS_res = self.tess_pdc_rot_dict['LS_res']
                     LS_periodogram = self.tess_pdc_rot_dict['LS_periodogram']
@@ -419,7 +421,8 @@ class Target:
                     self.tess_pdc_rot_fig = rot_tools.period_graph(target_name = 'TIC ' + str(self.tic),
                                                   lc_df = self.spoc_lc, flux_type = flux,
                                                   LS_res = LS_res, LS_periodogram = LS_periodogram,
-                                                  AC_res = AC_res, AC_periodogram = AC_periodogram)
+                                                  AC_res = AC_res, AC_periodogram = AC_periodogram,
+                                                  target_df = self.target_df)
         else:
             print("Need to run_spoc_rots first!")
             
@@ -428,6 +431,7 @@ class Target:
         keep_cols = ['time','sap_flux','sap_flux_err','pdcsap_flux','pdcsap_flux_err',
                      'sector']
         kepler_lc = self.kepler_lc.rename(columns = {'quarter':'sector'})[keep_cols]
+        self.target_info_query()
         if 'kepler_pdc_rot_dict' in self.available_attributes:
             for flux in flux_type:
                 if flux == 'sap_flux':
@@ -438,7 +442,8 @@ class Target:
                     self.kepler_sap_rot_fig = rot_tools.period_graph(target_name = 'KIC ' + str(self.kic),
                                                   lc_df = kepler_lc, flux_type = flux,
                                                   LS_res = LS_res, LS_periodogram = LS_periodogram,
-                                                  AC_res = AC_res, AC_periodogram = AC_periodogram)
+                                                  AC_res = AC_res, AC_periodogram = AC_periodogram,
+                                                  target_df = self.target_df)
                 if flux == 'pdcsap_flux':
                     LS_res = self.kepler_pdc_rot_dict['LS_res']
                     LS_periodogram = self.kepler_pdc_rot_dict['LS_periodogram']
@@ -447,7 +452,8 @@ class Target:
                     self.kepler_pdc_rot_fig = rot_tools.period_graph(target_name = 'KIC ' + str(self.kic),
                                                   lc_df = kepler_lc, flux_type = flux,
                                                   LS_res = LS_res, LS_periodogram = LS_periodogram,
-                                                  AC_res = AC_res, AC_periodogram = AC_periodogram)
+                                                  AC_res = AC_res, AC_periodogram = AC_periodogram,
+                                                  target_df = self.target_df)
         else:
             print("Need to run_kepler_rots first!")
         
