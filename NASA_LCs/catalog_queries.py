@@ -274,10 +274,10 @@ def get_TIC_data(ra,dec):
                 tic = temp_obs_df['ID'].iloc[0]
                 tic_found = True
                 continue
-            if len(np.unique(obs_df[obs_df['HIP'].to_numpy(dtype = 'str') != '']['HIP'])) == 1:
-                tic = obs_table['ID'][0]
-                tic_found = True
-                continue
+            # if len(np.unique(obs_df[obs_df['HIP'].to_numpy(dtype = 'str') != '']['HIP'])) == 1:
+            #     tic = obs_table['ID'][0]
+            #     tic_found = True
+            #     continue
     if tic_found == False:
         tic = np.nan
         print("Didn't find TIC for this object.")
