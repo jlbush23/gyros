@@ -50,13 +50,14 @@ class Target:
                 
     def target_info_query(self):
         ##add target TIC and Gaia info
-        TIC_query,_ = catQ.get_TIC_data(ra = self.ra, dec = self.dec)
-        TIC_query = TIC_query.rename(columns = {'ID':'tic','ra':'RA','dec':'DEC'})
-        gaia_query = catQ.get_gaia_data(ra = self.ra, dec = self.dec, gaia_kwrgs = 'all')
-        gaia_query['tic'] = self.tic
-        #create target df
-        self.target_df = TIC_query.merge(right = gaia_query, on = 'tic', how = 'left').drop_duplicates(subset = ['tic']).reset_index(drop=True)
-        self.available_attributes.append('target_df')
+        if self.tic != 'nan':
+            TIC_query,_ = catQ.get_TIC_data(ra = self.ra, dec = self.dec)
+            TIC_query = TIC_query.rename(columns = {'ID':'tic','ra':'RA','dec':'DEC'})
+            gaia_query = catQ.get_gaia_data(ra = self.ra, dec = self.dec, gaia_kwrgs = 'all')
+            gaia_query['tic'] = self.tic
+            #create target df
+            self.target_df = TIC_query.merge(right = gaia_query, on = 'tic', how = 'left').drop_duplicates(subset = ['tic']).reset_index(drop=True)
+            self.available_attributes.append('target_df')
         
         
     def add_spoc_LCs(self,tpf = False,lk_lc=True):
