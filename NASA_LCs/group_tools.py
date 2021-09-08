@@ -1189,7 +1189,8 @@ def pc_seq_uvwxyz(plot_df, tmag_summary_dict, group_toi_dict, cont_thresh = 0.7,
     fig.tight_layout()
     return(fig)        
             
-def comove_ff_rotations(query_df,download_dir,vlim=5,srad=25,ff_lists_loc = None):
+def comove_ff_rotations(query_df,download_dir,vlim=5,srad=25,ff_lists_loc = None, 
+                        tess_toi = True,targ_name = 'targ', rotations = True):
     if ff_lists_loc is None:
         import Comove
         #query gaia for RVs
@@ -1206,14 +1207,21 @@ def comove_ff_rotations(query_df,download_dir,vlim=5,srad=25,ff_lists_loc = None
             TOIs_in_ff_lists.append(fn.split(".")[0].split("toi")[1])
 
     for i,row in query_df.iterrows():
-        toi = str(row['TOI']).split(".")[0]
-        print("Working on TOI " + toi + ", object "  + str(i+1) + "/" + str(len(query_df)) + ".")
-        tic = str(row['tic'])
-        targname = "TOI " + toi
+        if tess_toi == True:
+            toi = str(row['TOI']).split(".")[0]
+            print("Working on TOI " + toi + ", object "  + str(i+1) + "/" + str(len(query_df)) + ".")
+            tic = str(row['tic'])
+            targname = "TOI " + toi
         
-        #make folder for TOI , and name subfolder for toi comove products
-        toi_folder = os.path.join(download_dir,'toi' + toi)
-        if os.path.exists(toi_folder) == False: os.mkdir(toi_folder)
+            #make folder for TOI , and name subfolder for toi comove products
+            toi_folder = os.path.join(download_dir,'toi' + toi)
+            if os.path.exists(toi_folder) == False: os.mkdir(toi_folder)
+        else:
+            targname = targ_name
+            toi_folder = os.path.join(download_dir,targname)
+            if os.path.exists(toi_folder) == False: os.mkdir(toi_folder)
+            
+            
         
         ff_product_folder = os.path.join(toi_folder,'ff_products/')
         
@@ -1251,14 +1259,15 @@ def comove_ff_rotations(query_df,download_dir,vlim=5,srad=25,ff_lists_loc = None
         for voff in voff_list:
             if len(friends_df) < 800: break
             friends_df = friends_df[friends_df['Voff(km/s)'] < voff].reset_index(drop = True)
+       
+        if tess_toi == True:
+            ## run group rotations with 'ff' settings
+            #create group toi dict
+            group_toi_dict = {'tic':tic,'toi':toi}
             
-        ## run group rotations with 'ff' settings
-        #create group toi dict
-        group_toi_dict = {'tic':tic,'toi':toi}
-        
-        # run the run function
-        ff_group_run(group_toi_dict = group_toi_dict, download_dir = toi_folder,
-                     friends_df = friends_df, ff_product_folder = ff_product_folder)
+            # run the run function
+            ff_group_run(group_toi_dict = group_toi_dict, download_dir = toi_folder,
+                         friends_df = friends_df, ff_product_folder = ff_product_folder)
         
 def ff_group_run(group_toi_dict,download_dir,friends_df,ff_product_folder):
     toi = group_toi_dict['toi']
