@@ -11,7 +11,7 @@ import astropy.units as u
 # from astroquery.gaia import Gaia
 from astropy.coordinates import SkyCoord
 
-import galpy.util.coords as gc #gc for galpy coords
+import galpy.util.bovy_coords as bc #gc for galpy coords
 
 def comove_coords(t,lit_gaia):
     ###could add other outputs like Vr, pred, in addition to sep,sep3d,and Vtan off
