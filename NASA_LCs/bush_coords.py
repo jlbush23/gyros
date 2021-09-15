@@ -11,7 +11,7 @@ import astropy.units as u
 # from astroquery.gaia import Gaia
 from astropy.coordinates import SkyCoord
 
-import galpy.util.bovy_coords as bc #gc for galpy coords
+import galpy.util.bovy_coords as bc #bc for bovy coords
 
 def comove_coords(t,lit_gaia):
     ###could add other outputs like Vr, pred, in addition to sep,sep3d,and Vtan off
@@ -58,19 +58,19 @@ def comove_coords(t,lit_gaia):
     sep3d = lit_sc.separation_3d(Pcoord)#in parsec
     
     
-    Pllbb     = gc.radec_to_lb(Pcoord.ra.value , Pcoord.dec.value , degree=True)
-    Ppmllpmbb = gc.pmrapmdec_to_pmllpmbb( Pcoord.pm_ra_cosdec.value , Pcoord.pm_dec.value , \
+    Pllbb     = bc.radec_to_lb(Pcoord.ra.value , Pcoord.dec.value , degree=True)
+    Ppmllpmbb = bc.pmrapmdec_to_pmllpmbb( Pcoord.pm_ra_cosdec.value , Pcoord.pm_dec.value , \
                                          Pcoord.ra.value , Pcoord.dec.value , degree=True )
-    Pvxvyvz   = gc.vrpmllpmbb_to_vxvyvz(Pcoord.radial_velocity.value , Ppmllpmbb[0] , Ppmllpmbb[1] , \
+    Pvxvyvz   = bc.vrpmllpmbb_to_vxvyvz(Pcoord.radial_velocity.value , Ppmllpmbb[0] , Ppmllpmbb[1] , \
                                    Pllbb[0] , Pllbb[1] , Pcoord.distance.value/1000.0 , XYZ=False , degree=True)
     
 
-    Gllbb = gc.radec_to_lb(lit_sc.ra.value , lit_sc.dec.value , degree=True)
-    Gxyz = gc.lbd_to_XYZ( Gllbb[:,0] , Gllbb[:,1] , lit_sc.distance/1000.0 , degree=True)
-    Gvrpmllpmbb = gc.vxvyvz_to_vrpmllpmbb( \
+    Gllbb = bc.radec_to_lb(lit_sc.ra.value , lit_sc.dec.value , degree=True)
+    Gxyz = bc.lbd_to_XYZ( Gllbb[:,0] , Gllbb[:,1] , lit_sc.distance/1000.0 , degree=True)
+    Gvrpmllpmbb = bc.vxvyvz_to_vrpmllpmbb( \
                     Pvxvyvz[0]*np.ones(len(Gxyz[:,0])) , Pvxvyvz[1]*np.ones(len(Gxyz[:,1])) , Pvxvyvz[2]*np.ones(len(Gxyz[:,2])) , \
                     Gxyz[:,0] , Gxyz[:,1] , Gxyz[:,2] , XYZ=True)
-    Gpmrapmdec = gc.pmllpmbb_to_pmrapmdec( Gvrpmllpmbb[:,1] , Gvrpmllpmbb[:,2] , Gllbb[:,0] , Gllbb[:,1] , degree=True)
+    Gpmrapmdec = bc.pmllpmbb_to_pmrapmdec( Gvrpmllpmbb[:,1] , Gvrpmllpmbb[:,2] , Gllbb[:,0] , Gllbb[:,1] , degree=True)
     
     # Code in case I want to do chi^2 cuts someday
     Gvtanerr = 1.0 * np.ones(len(Gxyz[:,0]))
