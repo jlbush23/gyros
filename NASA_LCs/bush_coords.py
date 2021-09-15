@@ -84,14 +84,14 @@ def comove_coords(t,lit_gaia):
     vr_pred = Gvrpmllpmbb[:,0] 
     
     #create results dataframe
-    res = pd.DataFrame(data = {'tic':[lit_gaia.tic.to_numpy(dtype = 'str')],
-                               'designation':[lit_gaia.designation.to_numpy(dtype = 'str')],
-                               'ra':[lit_sc.ra.value],
-                               'dec':[lit_sc.dec.value],
-                               'sep2D(deg)':[sep.value],
-                               'sep3D(pc)':[sep3d.value],
-                               'Vtan,off(km/s)':[vtanoff],
-                               'Vr,pred(km/s)':[vr_pred]
+    res = pd.DataFrame(data = {'tic':lit_gaia.tic.to_numpy(dtype = 'str'),
+                               'designation':lit_gaia.designation.to_numpy(dtype = 'str'),
+                               'ra':lit_sc.ra.value,
+                               'dec':lit_sc.dec.value,
+                               'sep2D(deg)':sep.value,
+                               'sep3D(pc)':sep3d.value,
+                               'Vtan,off(km/s)':vtanoff,
+                               'Vr,pred(km/s)':vr_pred
                                }
                        )
     
