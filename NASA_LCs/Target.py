@@ -11,6 +11,9 @@ import os
 
 import matplotlib.pyplot as plt
 
+from astropy import units as u
+from astropy.coordinates import SkyCoord
+
 import NASA_LCs.catalog_queries as catQ
 import NASA_LCs.lk_interface as lk_int
 import NASA_LCs.rotation_tools as rot_tools
@@ -19,16 +22,37 @@ import NASA_LCs.target_tools as tt
 from tess_cpm.interface import cpm_interface as cpm_int
 
 class Target:
-    def __init__(self,tic = None, ra = None, dec = None, query_info = True, kic = None, epic = None,
-                 sap_rot = None, sap_amp = None):
+    def __init__(self,tic = None, ra = None, dec = None, 
+                 query_info = True, kic = None, epic = None):
+        '''
+        
+
+        Parameters
+        ----------
+        tic : STR or INT, optional
+            Known TESS Input Catalog ID of the object. The default is None.
+        ra : FLOAT, optional
+            The right ascension, in degrees, of the object. The default is None.
+        dec : FLOAT, optional
+            The declination, in degrees, of the object. The default is None.
+        query_info : BOOL, optional
+            If True, query the TIC and Gaia for this object's information. The default is True.
+        kic : STR or INT, optional
+            Known Kepler Input Catalog ID of the object. The default is None.
+        epic : STR or INT, optional
+            Known Ecliptc Plane Input Catlaog ID of the object. The default is None.
+        Returns
+        -------
+        Returns initalized Target object with TIC and Gaia Information in the 
+        'target_df' attribute, with a SkyCoord attribute called 'coord'.
+
+        '''
         self.tic = tic
         self.ra = ra
         self.dec = dec
         self.kic = kic
         self.epic = epic
         self.available_attributes = []
-        self.sap_rot = sap_rot
-        self.sap_amp = sap_amp
         
         if self.tic is None:
             if (self.ra is not None) & (self.dec is not None):
@@ -58,6 +82,19 @@ class Target:
             #create target df
             self.target_df = TIC_query.merge(right = gaia_query, on = 'tic', how = 'left').drop_duplicates(subset = ['tic']).reset_index(drop=True)
             self.available_attributes.append('target_df')
+            
+            self.sc = SkyCoord(ra = self.target_df.squeeze().ra*u.deg, 
+                               dec = self.target_df.squeeze().dec*u.deg, 
+                               pm_ra_cosdec=self.target_df.squeeze().pmra*u.mas/u.yr, 
+                               pm_dec=self.target_df.squeeze().pmdec*u.mas/u.yr,
+                               distance=u.pc*(1000./self.target_df.squeeze().parallax),
+                               frame = 'icrs')
+            
+            self.target_df['x'] = self.sc.distance*np.cos(self.sc.galactic.b)*np.cos(self.sc.galactic.l)
+            self.target_df['y'] = self.sc.distance*np.cos(self.sc.galactic.b)*np.sin(self.sc.galactic.l)
+            self.target_df['z'] = self.sc.distance*np.sin(self.sc.galactic.b)
+            
+            ### add option for uvw if radial velocity is available from Gaia
         
         
     def add_spoc_LCs(self,tpf = False,lk_lc=True):
@@ -80,17 +117,27 @@ class Target:
             self.available_attributes.append('spoc_lc')
             
     def add_kepler_LC(self):
-        if self.kic is None:
-            self.kic = catQ.get_kic(ra = self.ra, dec = self.dec)
+        ### check if near kepler FOV
+        kep_fov_center = SkyCoord("19h22m40s 44d30m00s", frame = 'icrs')
+        sep = kep_fov_center.separation(self.sc)
+        #query lightkurve for LC if on sky distance is within 12 degrees
+        #Kepler FOV is 115 deg^2, so conservative check within radius of 12 degrees
+        in_fov = sep < 12. *u.deg 
+        
+        if in_fov == True:
+            #query Kepler input catalog for KIC ID
+            if self.kic is None:
+                self.kic = catQ.get_kic(ra = self.ra, dec = self.dec)
             
-        if str(self.kic) != 'nan':
-            self.kepler_lc, self.kepler_avail = lk_int.kepler_prime_LC(kic = self.kic)
-            self.available_attributes.append('kepler_lc')
-            return(self.kepler_avail)
-        else:
-            self.kepler_lc = pd.DataFrame()
-            self.kepler_avail = False
-            return(self.kepler_avail)
+            #only query LK if KIC is available
+            if str(self.kic) != 'nan':
+                self.kepler_lc, self.kepler_avail = lk_int.kepler_prime_LC(kic = self.kic)
+                self.available_attributes.append('kepler_lc')
+                return(self.kepler_avail)
+            else:
+                self.kepler_lc = pd.DataFrame()
+                self.kepler_avail = False
+                return(self.kepler_avail)
         
         
     def add_cpm_LC(self,bkg_subtract = True, bkg_n = 300, k=100, n=100, 
@@ -136,6 +183,7 @@ class Target:
         return(self.tc_avail)
     
     def add_k2sff_LC(self):
+        
         if self.epic is None:
             self.epic = catQ.get_epic(ra = self.ra, dec = self.dec)
             
