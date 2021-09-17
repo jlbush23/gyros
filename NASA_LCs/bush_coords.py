@@ -15,9 +15,19 @@ import galpy.util.bovy_coords as bc #bc for bovy coords
 
 def comove_coords(t,lit_gaia):
     ###could add other outputs like Vr, pred, in addition to sep,sep3d,and Vtan off
+    ra = t.target_df.squeeze()['ra']*u.deg
+    dec = t.target_df.squeeze()['dec']*u.deg
+    distance = (1000.0/t.target_df.squeeze()['parallax'][0])*u.pc
+    radvel = t.target_df['dr2_radial_velocity']*u.kilometer / u.second
+    pmra = t.target_df.squeeze()['pmra'] * u.mas / u.year
+    pmdec = t.target_df.squeeze()['pmdec'] * u.mas / u.year
     
     
-    Pcoord = t.sc
+    
+    Pcoord = SkyCoord( ra=ra, dec=dec, \
+                      distance=distance, frame='icrs' , \
+                      radial_velocity=radvel , \
+                      pm_ra_cosdec= pmra , pm_dec= pmdec )
     
     
     # # Query Gaia with search radius and parallax cut
