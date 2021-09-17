@@ -18,7 +18,7 @@ def comove_coords(t,lit_gaia):
     ra = t.target_df.squeeze()['ra']*u.deg
     dec = t.target_df.squeeze()['dec']*u.deg
     distance = (1000.0/t.target_df.squeeze()['parallax'])*u.pc
-    radvel = t.target_df['dr2_radial_velocity']*u.kilometer / u.second
+    radvel = t.target_df.squeeze()['dr2_radial_velocity']*u.kilometer / u.second
     pmra = t.target_df.squeeze()['pmra'] * u.mas / u.year
     pmdec = t.target_df.squeeze()['pmdec'] * u.mas / u.year
     
