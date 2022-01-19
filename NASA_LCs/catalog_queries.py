@@ -19,7 +19,7 @@ import numpy as np
 
 import os
 
-from uvwxyz.xyzuvw import xyz,uvw
+# from uvwxyz.xyzuvw import xyz,uvw
 
 
 def get_coord_from_ID(id_type, ID):    
@@ -262,8 +262,10 @@ def get_TIC_data(ra,dec):
     tic_found = False
     for rad in radii:
         if tic_found == False:
-            query_string = str(ra) + " " + str(dec) # make sure to have a space between the strings!#SkyCoord(ra = row['ra'], dec = row['dec'], frame = 'icrs') str(row['ra']) + " " + str(row['dec']) # make sure to have a space between the strings!
-            obs_table = Catalogs.query_region(coordinates = query_string, radius = rad*u.deg, catalog = "TIC")
+            # query_string = str(ra) + " " + str(dec) # make sure to have a space between the strings!#SkyCoord(ra = row['ra'], dec = row['dec'], frame = 'icrs') str(row['ra']) + " " + str(row['dec']) # make sure to have a space between the strings!
+            sc = SkyCoord(ra = ra*u.deg, 
+                         dec = dec*u.deg)
+            obs_table = Catalogs.query_region(coordinates = sc, radius = rad*u.deg, catalog = "TIC")
             obs_df = obs_table.to_pandas()
             if len(obs_table['ID']) == 1:
                 tic = obs_table['ID'][0]
