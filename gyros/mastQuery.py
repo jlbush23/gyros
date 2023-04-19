@@ -21,7 +21,7 @@ from astropy.io import fits
 from astropy.table import Table
 #from astropy.table import Column
 
-import NASA_LCs.rotation_tools as rotation_tools
+import gyros.rotation_tools as rotation_tools
 
 class mast_target(object):
     """

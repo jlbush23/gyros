@@ -17,9 +17,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
-from NASA_LCs.Target import Target
-from NASA_LCs.Group import Group
-import NASA_LCs.catalog_queries as catQ
+from gyros.Target import Target
+from gyros.Group import Group
+import gyros.catalog_queries as catQ
 
 def gg_run(group_name,group_df,group_fn,download_dir, lc_types = ['cpm'], 
            spoc_kwrgs = None, group_toi_dict = None, target_catQ = True,use_tic = True,use_kic = False,use_epic = False,

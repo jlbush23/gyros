@@ -14,10 +14,10 @@ import matplotlib.pyplot as plt
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-import NASA_LCs.catalog_queries as catQ
-import NASA_LCs.lk_interface as lk_int
-import NASA_LCs.rotation_tools as rot_tools
-import NASA_LCs.target_tools as tt
+import gyros.catalog_queries as catQ
+import gyros.lk_interface as lk_int
+import gyros.rotation_tools as rot_tools
+import gyros.target_tools as tt
 
 from tess_cpm.interface import cpm_interface as cpm_int
 

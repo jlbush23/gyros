@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 
 import os
 
-import NASA_LCs.group_tools as gt
-import NASA_LCs.catalog_queries as catQ
+import gyros.group_tools as gt
+import gyros.catalog_queries as catQ
 
 class Group:
     def __init__(self,name,group_df,group_toi_dict=None,group_info=None):
