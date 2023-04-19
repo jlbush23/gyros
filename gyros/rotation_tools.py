@@ -176,23 +176,30 @@ def my_LS_multi_sector(lc_df,flux_type,flux_err_avail = True, min_freq = 1/30):
         LS_results = periodogram_LS = None
         return(LS_results,periodogram_LS)
 
-def my_LS(time,flux,flux_err = None, max_per = 30): 
+def my_LS(time,flux,flux_err = None, min_per = 0.1, max_per = 20,
+          normalization = 'standard', samples_per_peak = 5,
+          threshold = 0.005): 
+    max_freq = 1/min_per
     min_freq = 1/max_per          
     
     if flux_err is None:  
         ls = LombScargle(time,flux)              
-        freq,power = ls.autopower(minimum_frequency = min_freq, maximum_frequency = 10.0)
+        freq,power = ls.autopower(minimum_frequency = min_freq, maximum_frequency = max_freq,
+                                  samples_per_peak = samples_per_peak,
+                                  normalization = normalization)
     else:
         ls = LombScargle(time,flux,flux_err)
-        freq,power = ls.autopower(minimum_frequency = min_freq, maximum_frequency = 10.0)
+        freq,power = ls.autopower(minimum_frequency = min_freq, maximum_frequency = max_freq,
+                                  samples_per_peak = samples_per_peak,
+                                  normalization = normalization)
     
-    threshhold = 0.005 
+    # threshhold = 0.005 
     peak_locs = []
     pow_peaks = []
     per_peaks = [] 
     
     for i in range(len(power)-2):
-        if (power[i] > power[i+1]) and (power[i]>power[i-1]) and (power[i]>threshhold):
+        if (power[i] > power[i+1]) and (power[i]>power[i-1]) and (power[i]>threshold):
             if (power[i] > power[i-2]) and (power[i] > power[i+2]):
                 peak_locs.append(i)
                 pow_peaks.append(power[i])
