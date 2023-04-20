@@ -175,7 +175,7 @@ def theia_run(group_num, group_fn, download_dir, lc_types = ['cpm'], group_toi_d
     # add TIC catalog info
     if 'tic' in group.group_df.columns.to_numpy(dtype = 'str'):
         append_tics = False
-        group.tics = group_df['tic'].to_numpy(dtype = 'str')
+        group.tics = group.group_df['tic'].to_numpy(dtype = 'str')
         group.group_df['tic'] = group.group_df['tic'].to_numpy(dtype = 'str')
     else:
         append_tics = True
@@ -407,7 +407,7 @@ def bulk_download(tic_list, download_dir, kic_list = None, epic_list = None,
             if 'tpf_rot_dict' in target_obj.available_attributes:
                 tpf_rot_dict = target_obj.tpf_rot_dict
                 if 'rot_fig' in tpf_rot_dict.keys():
-                    del spoc_rot_dict['rot_fig']
+                    del tpf_rot_dict['rot_fig']
                 
                 target_rots_dict['tpf'] = tpf_rot_dict
             else:
