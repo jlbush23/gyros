@@ -28,8 +28,8 @@ from astropy.time import Time
 
 import shutil
 
-import NASA_LCs.catalog_queries as catQ
-import NASA_LCs.rotation_tools as rt
+import gyros.catalog_queries as catQ
+import gyros.rotation_tools as rt
 
 from tqdm import tqdm
 
