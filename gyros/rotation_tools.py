@@ -374,9 +374,19 @@ def amp_multi_sector(lc_df,flux_type):
     
     return(amp_df)
 
-def measure_amp(flux):
-    amplitude = np.nanpercentile(a = flux, q = 95) - np.nanpercentile(a = flux, q = 5)
+def amp(flux, percent = 5):
+    amplitude = np.nanpercentile(a = flux, q = 1-percent) - np.nanpercentile(a = flux, q = percent)
     return(amplitude)
+
+def cdpp(time,flux,flux_err = None, 
+         transit_duration=13, savgol_window=101, savgol_polyorder=2, sigma=5.0):
+    lcobj = lk.LightCurve(time = time, flux = 1+flux, flux_err = flux_err
+                          )
+    cdpp = lcobj.estimate_cdpp(transit_duration = transit_duration,
+                          savgol_window = savgol_window,
+                          savgol_polyorder = savgol_polyorder,
+                          sigma = sigma)
+    return(cdpp)
 
 def best_period(rot_df):
     temp_Power1 = (rot_df['LS_Power1'].dropna()).to_numpy(dtype='float')        

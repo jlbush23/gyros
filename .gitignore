@@ -28,6 +28,7 @@ creds.js
 *.tsv
 *.tsv.gz
 *.xlsx
+test*
 
 
 # Mac/OSX
