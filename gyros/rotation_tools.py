@@ -375,7 +375,7 @@ def amp_multi_sector(lc_df,flux_type):
     return(amp_df)
 
 def amp(flux, percent = 5):
-    amplitude = np.nanpercentile(a = flux, q = 1-percent) - np.nanpercentile(a = flux, q = percent)
+    amplitude = np.nanpercentile(a = flux, q = 100-percent) - np.nanpercentile(a = flux, q = percent)
     return(amplitude)
 
 def cdpp(time,flux,flux_err = None, 
