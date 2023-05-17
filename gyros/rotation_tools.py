@@ -27,6 +27,8 @@ from gatspy import periodic
 
 import starspot as ss
 
+import lightkurve as lk
+
 def ss_rots_multi_sector(lc_df, flux_type, flux_err_avail= False,
                          min_per = 0.1, max_per = 29):
     
