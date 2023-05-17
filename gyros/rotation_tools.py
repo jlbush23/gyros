@@ -384,10 +384,13 @@ def cdpp(time,flux,flux_err = None,
          transit_duration=13, savgol_window=101, savgol_polyorder=2, sigma=5.0):
     lcobj = lk.LightCurve(time = time, flux = 1+flux, flux_err = flux_err
                           )
-    cdpp = lcobj.estimate_cdpp(transit_duration = transit_duration,
-                          savgol_window = savgol_window,
-                          savgol_polyorder = savgol_polyorder,
-                          sigma = sigma)
+    try:
+        cdpp = lcobj.estimate_cdpp(transit_duration = transit_duration,
+                            savgol_window = savgol_window,
+                            savgol_polyorder = savgol_polyorder,
+                            sigma = sigma)
+    except:
+        cdpp = np.nan
     return(cdpp)
 
 def best_period(rot_df):
