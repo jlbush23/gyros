@@ -367,11 +367,11 @@ def amp_multi_sector(lc_df,flux_type):
         temp_flux = temp_lc[flux_type]
         if flux_type != 'cpm':
             temp_flux = temp_flux/np.nanmedian(temp_flux)
-        amp = measure_amp(flux = temp_flux)
+        amplitude = amp(flux = temp_flux)
         if i == 0: 
-            amp_df = pd.DataFrame(data = {'amp':[amp],'sector':[sector]})
+            amp_df = pd.DataFrame(data = {'amp':[amplitude],'sector':[sector]})
         else:
-            temp_df = pd.DataFrame(data = {'amp':[amp],'sector':[sector]})
+            temp_df = pd.DataFrame(data = {'amp':[amplitude],'sector':[sector]})
             amp_df= pd.concat([amp_df,temp_df])      
     
     return(amp_df)
