@@ -21,7 +21,7 @@
 node_modules/
 creds.js
 
-# Private Files
+## Private Files
 *.json
 *.csv
 *.csv.gz
@@ -37,6 +37,8 @@ gyros/mastQuery.py
 gyros/Target.py
 gyros/target_tools.py
 gyros/lk_interface.py
+# Literature Rotations
+literature_rotations/
 
 
 
