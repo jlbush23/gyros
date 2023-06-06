@@ -30,11 +30,11 @@ creds.js
 *.xlsx
 test*
 # Old NASA_LCs files
-bush_coords.py
-group_tools.py
-Group.py
-mastQuery.py
-Target.py
+gyros/bush_coords.py
+gyros/group_tools.py
+gyros/Group.py
+gyros/mastQuery.py
+gyros/Target.py
 
 
 
