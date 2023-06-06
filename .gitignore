@@ -29,6 +29,14 @@ creds.js
 *.tsv.gz
 *.xlsx
 test*
+# Old NASA_LCs files
+bush_coords.py
+group_tools.py
+Group.py
+mastQuery.py
+Target.py
+
+
 
 
 # Mac/OSX
