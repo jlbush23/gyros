@@ -12,10 +12,10 @@ import os
 import pandas as pd
 import numpy as np
 
+import gyros.ffi_cpm as fc
 
-
-import ffi_cpm as fc
-
+## Set your project directory path with the 'pdir' variable
+## Example is set to the test sample in samples/
 pdir = r'/Users/bush/Documents/TOI1224/second_cut'
 bench_fn = os.path.join(pdir, 'membership_banyan_dr3.csv')
 
