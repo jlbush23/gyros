@@ -35,6 +35,8 @@ gyros/group_tools.py
 gyros/Group.py
 gyros/mastQuery.py
 gyros/Target.py
+gyros/target_tools.py
+gyros/lk_interface.py
 
 
 
