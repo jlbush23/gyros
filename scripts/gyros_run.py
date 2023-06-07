@@ -27,7 +27,7 @@ if os.path.exists(pdir) == False: os.mkdir(pdir)
 ### Set the path name for the sample of stars you want lightcurves for
 # Example is set to 10 stars from the MELANGE-4 Association in samples/
 
-sample_fn = '/samples/MELANGE-4_sample.csv'
+sample_fn = 'samples/MELANGE-4_sample.csv'
 
 ### Read in the sample as a pandas dataframe
 # Code only needs the 'csv' to have RA/Dec columns

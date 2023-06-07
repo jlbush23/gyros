@@ -39,6 +39,8 @@ gyros/target_tools.py
 gyros/lk_interface.py
 # Literature Rotations
 literature_rotations/
+# Files that may be altered in the test
+samples/MELANGE-4_sample.csv
 
 
 
