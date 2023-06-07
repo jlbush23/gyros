@@ -467,36 +467,36 @@ def ffi_cpm(query_df, query_fn, download_dir, group_name,
         #### REMOVE BEFORE REUSING IN THE FUTURE
         
         ##check if already successfully extracted CPM downloaded
-        if ('tic' + tic) in os.listdir(download_dir):
-            tesscut_dir = os.path.join(tic_dir, 'tesscut')
-            cpm_dir = os.path.join(tic_dir, 'cpm')
+        # if ('tic' + tic) in os.listdir(download_dir):
+        #     tesscut_dir = os.path.join(tic_dir, 'tesscut')
+        #     cpm_dir = os.path.join(tic_dir, 'cpm')
             
-            if os.path.exists(cpm_dir) == True:
-                success.append(True)
-                print("Already downloaded and extracted CPM. Moving to next target.")
-                continue
-            elif os.path.exists(tesscut_dir) == True:
-                success.append(False)
-                print("TESS Cut downloaded, but some issue caused it to be unavailable.")
-                ## check if TESS cut files still available. If so, run extraction. Else, redownload.
-                if len(os.listdir(tesscut_dir)) > 0:
-                    if extract_cpm == True:
-                        _ = cpm_all_sectors(tic_dir = tic_dir,
-                                            tesscut_dir = tesscut_dir,
-                                            keep_tesscut = keep_tesscut,
-                                            xtract_param = xtract_param)
+        #     if os.path.exists(cpm_dir) == True:
+        #         success.append(True)
+        #         print("Already downloaded and extracted CPM. Moving to next target.")
+        #         continue
+        #     elif os.path.exists(tesscut_dir) == True:
+        #         success.append(False)
+        #         print("TESS Cut downloaded, but some issue caused it to be unavailable.")
+        #         ## check if TESS cut files still available. If so, run extraction. Else, redownload.
+        #         if len(os.listdir(tesscut_dir)) > 0:
+        #             if extract_cpm == True:
+        #                 _ = cpm_all_sectors(tic_dir = tic_dir,
+        #                                     tesscut_dir = tesscut_dir,
+        #                                     keep_tesscut = keep_tesscut,
+        #                                     xtract_param = xtract_param)
 
-                        _ = LS_fits_update(tic_dir = tic_dir)
-                        print("Successfully extracted CPM from pre-downloaded .fits files.")
-                        print("Moving to next target :)")
-                        continue
-                print("Deleting TESS Cut folder and trying again.")
-                shutil.rmtree(tesscut_dir)
-            else:
-                success.append(False)
-                print("TIC directory exists, but unsuccessful. Trying again.")
+        #                 _ = LS_fits_update(tic_dir = tic_dir)
+        #                 print("Successfully extracted CPM from pre-downloaded .fits files.")
+        #                 print("Moving to next target :)")
+        #                 continue
+        #         print("Deleting TESS Cut folder and trying again.")
+        #         shutil.rmtree(tesscut_dir)
+        #     else:
+        #         success.append(False)
+        #         print("TIC directory exists, but unsuccessful. Trying again.")
         
-        tesscut_dir = None
+        # tesscut_dir = None
         #### REMOVE ABOVE CODE BEFORE REUSING FUNCITON IN THE FUTURE
         
         ### try to download ffi
