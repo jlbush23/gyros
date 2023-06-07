@@ -36,7 +36,7 @@ gyros/Group.py
 gyros/mastQuery.py
 gyros/Target.py
 gyros/target_tools.py
-gyros/lk_interface.py
+# gyros/lk_interface.py
 # Literature Rotations
 literature_rotations/
 # Files that may be altered in the test
