@@ -4,7 +4,7 @@ Get light curves from NASA's *Kepler*, *K2*, and *TESS* space missions! Measure 
 The main purpose of this package is to automate the downloading of *TESS* Full Frame Image Data and subsequent extraction of CPM lightcurves, but there are some nice functions to automate the downloading of *Kepler* and *K2* lightcurves as well. The *TESS* CPM code is containted in the `ffi_cpm.py` file, and the *Kepler* and *K2* code is containted in `lk_interface.py`.
 
 ## Dependencies
-This package requires proper installation of the [`lightkurve`](https://docs.lightkurve.org/) and [`unpopular`](https://github.com/soichiro-hattori/unpopular]). Make sure to visit those pages and install them properly. This package also makes use of `astropy`, which should come standard in an Anaconda environment. It could be good to make sure `astropy` is up-to-date.
+This package requires proper installation of the [`lightkurve`](https://docs.lightkurve.org/) and [`unpopular`](https://github.com/soichiro-hattori/unpopular/]). Make sure to visit those pages and install them properly. This package also makes use of `astropy`, which should come standard in an Anaconda environment. It could be good to make sure `astropy` is up-to-date.
 
 ## Download and Install
 To use this package, clone the repository with your favorite method. I recommend opening the terminal and using `git clone https://github.com/jlbush23/gyros`. 
