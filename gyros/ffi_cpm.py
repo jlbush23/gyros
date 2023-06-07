@@ -419,7 +419,7 @@ def LS_fits_update(tic_dir,lc_type = 'cpm', max_per = 30):
     
 #%% x) downlaod/extract function
 
-def ffi_cpm(query_df, query_fn, download_dir, group_name,
+def ffi_cpm(query_df, query_fn, download_dir, pdir, group_name,
             size = 50,
             extract_cpm = True,
             xtract_param = pd.DataFrame(data = {'bkg_subtract':[True],
@@ -532,7 +532,7 @@ def ffi_cpm(query_df, query_fn, download_dir, group_name,
         
     query_df['TESScut_avail'] = download_success
     
-    query_df_dir = os.path.split(query_fn)[0]
+    # query_df_dir = os.path.split(query_fn)[0]
     
-    query_fn2 = os.path.join(query_df_dir,str(group_name) + '_ffi_download_success.csv')
+    query_fn2 = os.path.join(pdir,str(group_name) + '_ffi_download_success.csv')
     query_df.to_csv(query_fn2,index = False)

@@ -49,14 +49,10 @@ sample_query = pd.read_csv(sample_fn)
 #   the lightcurves
 download_dir = os.path.join(pdir,'lightcurves')
 
-### Name the sample you are querying 
-sample_name = 'TOI1224-Friends'
-
-### Name an output success file that reports on FFI data 
-#   availability and contains all info available in the 
-#   TIC for that star if a TIC match was found
-output_fn = os.path.join(pdir,'TOI1224_query_success.csv')
-
+### Name the sample you are querying. This will be used to name a file
+#   that reports on FFI data availability and contains all info available 
+#   in the TIC for that star if a TIC match was found
+sample_name = 'test_sample'
 
 ### Set xtract parameters for the CPM extraction through the 
 #   unpopular package by creating a pandas dataframe
@@ -116,6 +112,7 @@ xtract_param = pd.DataFrame(data = {'bkg_subtract':[True],
 fc.ffi_cpm(query_df = sample_query, 
            query_fn = sample_fn, 
            download_dir = download_dir, 
+           pdir = pdir,
            group_name = sample_name,
            xtract_param = xtract_param,
            keep_tesscut = False)
