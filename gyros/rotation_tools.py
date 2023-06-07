@@ -12,7 +12,7 @@ from astropy.timeseries import LombScargle
 from astropy.table import Table
 from astropy.time import Time
 
-import exoplanet as xo
+
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -23,9 +23,12 @@ import matplotlib.gridspec as gridspec
 
 from scipy.stats import binned_statistic as bin_stat
 
-from gatspy import periodic
+### uncomment these if you want to be able to use their rotation measurement implementations
+### in the code below
 
-import starspot as ss
+# from gatspy import periodic
+# import exoplanet as xo
+# import starspot as ss
 
 import lightkurve as lk
 
