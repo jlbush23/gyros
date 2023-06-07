@@ -1,4 +1,4 @@
-# [!gyros](https://www.freepik.com/free-vector/flat-design-nutritious-shawarma-illustration_15478598.htm)
+# ![gyros](https://www.freepik.com/free-vector/flat-design-nutritious-shawarma-illustration_15478598.htm)
 
 
 Get light curves from NASA's *Kepler*, *K2*, and *TESS* space missions! Measure light curve properties, such as rotation, amplitude, and CDPP.
