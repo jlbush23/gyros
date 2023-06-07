@@ -16,9 +16,9 @@ import exoplanet as xo
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-mpl.rcParams['font.sans-serif'] = "DejaVu Sans"
-mpl.rcParams['font.family'] = "sans-serif"
-mpl.rcParams['text.usetex'] = False
+# mpl.rcParams['font.sans-serif'] = "DejaVu Sans"
+# mpl.rcParams['font.family'] = "sans-serif"
+# mpl.rcParams['text.usetex'] = False
 import matplotlib.gridspec as gridspec
 
 from scipy.stats import binned_statistic as bin_stat
