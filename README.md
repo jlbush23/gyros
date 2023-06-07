@@ -1,4 +1,6 @@
-# gyros
+# [!gyros](https://www.freepik.com/free-vector/flat-design-nutritious-shawarma-illustration_15478598.htm)
+
+
 Get light curves from NASA's *Kepler*, *K2*, and *TESS* space missions! Measure light curve properties, such as rotation, amplitude, and CDPP.
 
 The main purpose of this package is to automate the downloading of *TESS* Full Frame Image Data and subsequent extraction of CPM lightcurves, but there are some nice functions to automate the downloading of *Kepler* and *K2* lightcurves as well. The *TESS* CPM code is containted in the `ffi_cpm.py` file, and the *Kepler* and *K2* code is containted in `lk_interface.py`.
