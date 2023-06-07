@@ -116,7 +116,7 @@ xtract_param = pd.DataFrame(data = {'bkg_subtract':[True],
 fc.ffi_cpm(query_df = sample_query, 
            query_fn = sample_fn, 
            download_dir = download_dir, 
-           group_name = group_name,
+           group_name = sample_name,
            xtract_param = xtract_param,
            keep_tesscut = False)
 
