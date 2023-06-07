@@ -9,7 +9,7 @@ from setuptools import setup
 dependencies = ['numpy','pandas',
                 'astroquery','astropy','exoplanet','matplotlib','scipy',
                 'lightkurve',
-                'tess_cpm']
+                'unpopular']
 
 setup(
       name = 'gyros',
