@@ -30,6 +30,8 @@ creds.js
 *.tsv.gz
 *.xlsx
 test*
+test/
+.fits
 # Old NASA_LCs files
 gyros/bush_coords.py
 gyros/group_tools.py

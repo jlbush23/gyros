@@ -19,12 +19,22 @@ Run a test to make sure the *TESS* FFI download and CPM extraction are working p
 
 Before running the test, examine the `gyros_run.py` file in the `scripts` folder. This is an example runscript that can be used for any stellar population of interest.
 
-While in the top `'gyros'` directory in your terminal, run `python scripts/gyros_run.py`. 
+While in the top `gyros/` directory in your terminal, run `python scripts/gyros_run.py`. 
 
-This will download and extract CPM lightcurves for a sample of 10 stars from the MELANGE-4 stellar association. 
+This will download and extract CPM lightcurves for a sample of 3 stars from the MELANGE-4 stellar association. 
 
 You will see the code begin to run and print its outputs. Let it run to completion.
 
-A new folder named `test` will appear locally in your `gyros` directory. In it should be 10 subdirectories named after each star's TIC ID. Within those folders should be `.fits` files containing the CPM lightcurves for each sector of available *TESS* data, along with other information, including an estimate of the rotation period for that sector.
+A new folder named `test/` will appear locally in your `gyros/` directory. In it should be 3 subdirectories named after each star's TIC ID. Within those folders should be `.fits` files containing the CPM lightcurves for each sector of available *TESS* data, along with other information, including an estimate of the rotation period for that sector. Within `test/`, there should also be an output file with a column named `TESSCut_Avail` that is true if the FFI data was successfully downloaded.
+
+## Using this code
+
+Because the package is importable whenever you're in a Python environment, you can use the individual functions in any of the scripts in the `gyros/gyros/` directory.
+
+To use the `gyros_run.py` script to automate the downloading and extraction of *TESS* CPM lightcurves for new populations of stars, you have two main options:
+1) Edit the `gyros_run.py` script within the module each time you have a new population of stars, taking care to name the directories where you want your lightcurves and output files saved.
+2) Manually create new directories in your computer's directory explorer, then copy the `gyros_run.py` file into that directory, and edit it there. 
+
+Option 2 may be your best bet for lowest maintenance.
 
 
