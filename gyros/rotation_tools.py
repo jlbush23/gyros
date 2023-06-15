@@ -183,7 +183,8 @@ def my_LS_multi_sector(lc_df,flux_type,flux_err_avail = True, min_freq = 1/30):
 
 def my_LS(time,flux,flux_err = None, min_per = 0.1, max_per = 20,
           normalization = 'standard', samples_per_peak = 5,
-          threshold = 0.005): 
+          threshold = 0.001,
+          find_centroid = True): 
     max_freq = 1/min_per
     min_freq = 1/max_per          
     
@@ -276,6 +277,16 @@ def my_LS(time,flux,flux_err = None, min_per = 0.1, max_per = 20,
                                          'False_Prob1','False_Prob2','False_Prob3',
                                          'LS_Power1','LS_Power2','LS_Power3'])
     temp_LS_results_df = temp_LS_results_tab.to_pandas()
+
+    if find_centroid == True:
+        bestper = ((1./freq)[np.where(power == np.max(power))])[0]
+        temp_LS_results_df['LS_Per1_peak'] = bestper
+        ## find it by centrioding
+        x = (1./freq)
+        y = power
+        l = np.where((x > bestper*0.9) & (x<bestper*1.1))
+        centroid = np.sum(x[l]*y[l])/np.sum(y[l])
+        temp_LS_results_df['LS_Per1_centroid'] =  centroid        
     return(temp_LS_results_df,temp_periodogram_df)
 
 
