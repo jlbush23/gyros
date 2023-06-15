@@ -279,14 +279,18 @@ def my_LS(time,flux,flux_err = None, min_per = 0.1, max_per = 20,
     temp_LS_results_df = temp_LS_results_tab.to_pandas()
 
     if find_centroid == True:
-        bestper = ((1./freq)[np.where(power == np.max(power))])[0]
-        temp_LS_results_df['LS_Per1_peak'] = bestper
-        ## find it by centrioding
-        x = (1./freq)
-        y = power
-        l = np.where((x > bestper*0.9) & (x<bestper*1.1))
-        centroid = np.sum(x[l]*y[l])/np.sum(y[l])
-        temp_LS_results_df['LS_Per1_centroid'] =  centroid        
+        if len(top3) == 0:
+            temp_LS_results_df['LS_Per1_peak'] = np.nan
+            temp_LS_results_df['LS_Per1_centroid'] = np.nan
+        else:
+            bestper = ((1./freq)[np.where(power == np.max(power))])[0]
+            temp_LS_results_df['LS_Per1_peak'] = bestper
+            ## find it by centrioding
+            x = (1./freq)
+            y = power
+            l = np.where((x > bestper*0.9) & (x<bestper*1.1))
+            centroid = np.sum(x[l]*y[l])/np.sum(y[l])
+            temp_LS_results_df['LS_Per1_centroid'] =  centroid        
     return(temp_LS_results_df,temp_periodogram_df)
 
 
